@@ -867,8 +867,26 @@ function renderGymMapCard(container) {
 
 function renderReply(b, parts) {
   b.textContent = "";
-  const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
-  const textStr = texts.join("\n").trim();
+  const extractedLines = [];
+
+  parts.forEach(p => {
+    if (!p) return;
+    if (p.kind === "text" || (!p.kind && p.text)) {
+      if (p.text) extractedLines.push(p.text);
+    } else if (p.kind === "a2ui" && p.data) {
+      const data = p.data;
+      if (data.surfaceUpdate && Array.isArray(data.surfaceUpdate.components)) {
+        data.surfaceUpdate.components.forEach(compObj => {
+          const comp = compObj.component || {};
+          if (comp.Text && comp.Text.text && comp.Text.text.literalString) {
+            extractedLines.push(comp.Text.text.literalString);
+          }
+        });
+      }
+    }
+  });
+
+  const textStr = extractedLines.join("\n").trim();
   if (textStr) {
     b.appendChild(el("div", null, textStr));
     const urlMatches = textStr.match(/https?:\/\/[^\s"]+\.(mp4|webm|png|jpg|jpeg)/gi);
@@ -881,8 +899,10 @@ function renderReply(b, parts) {
         }
       });
     }
+    if (/workout|hiit|routine|exercise|seconds|reps/i.test(textStr)) { renderTimerWidget(b, 60); }
+  } else {
+    b.textContent = "Coach replied, but no displayable text was returned.";
   }
-  if (!b.childNodes.length) b.textContent = "(no response)";
   log.scrollTop = log.scrollHeight;
 }
 
