@@ -12,10 +12,10 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="manifest" href="/manifest.json">
 
-<!-- Google Fonts: Plus Jakarta Sans & Material Symbols -->
+<!-- Google Fonts: Plus Jakarta Sans, Outfit & Material Symbols -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
 <!-- Leaflet CSS for Gym Finder Map -->
@@ -26,43 +26,50 @@
     --accent: #059669;
     --accent-light: #10b981;
     --accent-dark: #047857;
-    --accent-glow: rgba(16, 185, 129, 0.18);
-    --bg-main: #f8fafc;
+    --accent-gradient: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+    --accent-glow: rgba(16, 185, 129, 0.2);
+    --bg-main: #f1f5f9;
     --bg-card: #ffffff;
     --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-    --border: #e2e8f0;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border: #cbd5e1;
     --pill-bg: #ffffff;
-    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
-    --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-    --shadow-lg: 0 10px 25px -5px rgba(5, 150, 105, 0.2);
+    --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 12px 32px -6px rgba(5, 150, 105, 0.25);
   }
 
   [data-theme="dark"] {
     --accent: #10b981;
     --accent-light: #34d399;
     --accent-dark: #059669;
-    --accent-glow: rgba(52, 211, 153, 0.22);
-    --bg-main: #0f172a;
-    --bg-card: #1e293b;
+    --accent-gradient: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+    --accent-glow: rgba(52, 211, 153, 0.25);
+    --bg-main: #0b1329;
+    --bg-card: #111c38;
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
     --text-muted: #64748b;
-    --border: #334155;
-    --pill-bg: #1e293b;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
+    --border: #1e293b;
+    --pill-bg: #111c38;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 12px 32px -6px rgba(16, 185, 129, 0.35);
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   html { height: 100vh; height: 100dvh; }
   body {
-    margin: 0; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, Roboto, sans-serif;
+    margin: 0; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     background: var(--bg-main); color: var(--text-primary); display: flex; flex-direction: column;
     height: 100vh; height: 100dvh; min-height: -webkit-fill-available; overflow: hidden;
     transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, h4, .brand-title, .auth-title, .modal-title, .welcome-hero h2 {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.02em;
   }
 
   /* --- MODAL BACKDROPS --- */
