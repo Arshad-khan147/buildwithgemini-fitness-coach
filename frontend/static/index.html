@@ -133,7 +133,7 @@
   .quick-stats-bar {
     background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 0.45rem 1rem;
     display: flex; align-items: center; justify-content: space-around; font-size: 0.78rem; font-weight: 600;
-    color: var(--text-secondary); flex-shrink: 0; cursor: pointer;
+    color: var(--text-secondary); flex-shrink: 0; cursor: pointer; flex-wrap: wrap; gap: 0.5rem;
   }
   .stat-item { display: flex; align-items: center; gap: 0.35rem; }
   .stat-item strong { color: var(--accent); }
@@ -161,15 +161,16 @@
   .bubble { padding: 0.85rem 1.1rem; border-radius: 18px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); font-size: 0.95rem; line-height: 1.5; box-shadow: var(--shadow-sm); white-space: pre-wrap; word-break: break-word; }
   .msg-row.agent .bubble { border-top-left-radius: 4px; }
   .msg-row.user .bubble { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: none; border-top-right-radius: 4px; box-shadow: var(--shadow-lg); }
-  .bubble.rich { background: transparent; border: none; padding: 0; max-width: 100%; white-space: normal; box-shadow: none; }
 
   .msg-actions { display: flex; gap: 0.4rem; align-self: flex-start; flex-wrap: wrap; }
   .msg-action-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); border-radius: 12px; padding: 0.25rem 0.55rem; font-size: 0.72rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; transition: all 0.2s ease; }
   .msg-action-btn:active { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
   .msg-action-btn .material-symbols-outlined { font-size: 0.95rem; }
 
-  /* --- WIDGETS --- */
-  .timer-widget, .macro-card, .hr-zone-card, .gym-map-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.1rem; margin-top: 0.5rem; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 0.85rem; }
+  /* --- CARDS & WIDGETS --- */
+  .timer-widget, .macro-card, .hr-zone-card, .gym-map-card, .bmi-card, .sub-card, .water-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.1rem; margin-top: 0.5rem; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 0.85rem;
+  }
   .timer-display { font-size: 2rem; font-weight: 800; color: var(--accent); font-family: monospace; letter-spacing: 0.05em; text-align: center; }
   .timer-controls { display: flex; gap: 0.5rem; justify-content: center; }
   .timer-btn { border: none; background: var(--accent); color: #ffffff; padding: 0.45rem 0.9rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
@@ -185,6 +186,10 @@
   .zone-spectrum { display: flex; flex-direction: column; gap: 0.4rem; }
   .zone-row { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.65rem; border-radius: 10px; font-size: 0.78rem; font-weight: 700; color: #ffffff; }
   .z1 { background: #3b82f6; } .z2 { background: #10b981; } .z3 { background: #eab308; } .z4 { background: #f97316; } .z5 { background: #ef4444; }
+
+  /* Hydration Progress Bar */
+  .water-progress-bg { width: 100%; height: 16px; background: var(--bg-main); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+  .water-progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%); width: 0%; transition: width 0.3s ease; }
 
   /* Map Container */
   #map-element { height: 220px; width: 100%; border-radius: 12px; border: 1px solid var(--border); }
@@ -205,14 +210,6 @@
   .wave-bar { width: 3px; height: 100%; background: #ef4444; border-radius: 2px; animation: wavePulse 1s infinite ease-in-out alternate; }
   .wave-bar:nth-child(2) { animation-delay: 0.2s; } .wave-bar:nth-child(3) { animation-delay: 0.4s; }
 
-  /* --- A2UI --- */
-  .a2card { border: 1px solid var(--border); border-radius: 16px; padding: 1.1rem; background: var(--bg-card); box-shadow: var(--shadow-md); max-width: 100%; }
-  .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
-  .a2row { display: flex; flex-direction: row; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
-  .a2row.between { justify-content: space-between; }
-  .a2text { margin: 0; line-height: 1.5; color: var(--text-primary); }
-  .a2text.a2-h1 { font-size: 1.3rem; font-weight: 800; color: var(--accent-dark); }
-  .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.6rem 0; width: 100%; }
   .a2img { max-width: 100%; height: auto; border-radius: 12px; display: block; box-shadow: var(--shadow-sm); cursor: pointer; }
   .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.35rem; line-height: 1; vertical-align: middle; color: var(--accent); }
 
@@ -303,19 +300,21 @@
         </select>
       </div>
       <div class="input-field-group">
-        <label>Dietary Focus</label>
-        <select id="set-diet" class="settings-select">
-          <option value="High Protein Balanced">🥩 High Protein</option>
-          <option value="Plant-Based Vegan">🥗 Plant-Based / Vegan</option>
-          <option value="Keto / Low Carb">🥑 Keto / Low Carb</option>
-          <option value="Standard Balanced">🍱 Standard Balanced</option>
+        <label>Audio Voice Coach Speed</label>
+        <select id="set-tts-rate" class="settings-select">
+          <option value="0.9">0.9x Slow & Clear</option>
+          <option value="1.0" selected>1.0x Normal Speed</option>
+          <option value="1.25">1.25x Fast Coach</option>
         </select>
       </div>
       <div class="input-field-group">
         <label>Health / Injury Restrictions</label>
         <input type="text" id="set-injury" class="auth-input" placeholder="e.g. Sensitive knees, lower back caution">
       </div>
-      <button type="submit" class="action-submit-btn">💾 Save Athlete Profile</button>
+      <div style="display:flex;gap:0.5rem;margin-top:0.4rem">
+        <button type="submit" class="action-submit-btn" style="flex:1">💾 Save Settings</button>
+        <button type="button" id="export-data-btn" class="action-submit-btn" style="flex:1;background:var(--bg-main);color:var(--text-primary);border:1px solid var(--border)">📥 Backup JSON</button>
+      </div>
     </form>
   </div>
 </div>
@@ -379,9 +378,9 @@
 
 <!-- QUICK STATS SUBHEADER -->
 <div class="quick-stats-bar" id="stats-bar-btn">
-  <div class="stat-item">🏋️ Workouts: <strong id="stat-workouts">3 Logged</strong></div>
-  <div class="stat-item">❤️ Target HR: <strong id="stat-hr">130-165 BPM</strong></div>
-  <div class="stat-item">⚡ Memory: <strong>Active</strong></div>
+  <div class="stat-item" id="btn-open-log">🏋️ Workouts: <strong id="stat-workouts">3 Logged</strong></div>
+  <div class="stat-item" id="btn-water-track">💧 Water: <strong id="stat-water">1.75L / 3.0L</strong></div>
+  <div class="stat-item">❤️ Target HR: <strong>130-165 BPM</strong></div>
 </div>
 
 <!-- LOG -->
@@ -391,9 +390,10 @@
 <div class="bottom-container">
   <div id="examples">
     <button class="pill" type="button" data-prompt="Suggest a 30-min beginner HIIT workout">🏃 30-min HIIT</button>
+    <button class="pill" type="button" data-prompt="Show Body Mass Index & Fat % card">📐 BMI & Body Fat</button>
+    <button class="pill" type="button" data-prompt="Show Exercise Substitution Finder card">🔄 Exercise Replacements</button>
+    <button class="pill" type="button" data-prompt="Show Hydration Tracker card">💧 Water Intake</button>
     <button class="pill" type="button" data-prompt="Show 5-Zone Target Heart Rate card">❤️ HR Zones</button>
-    <button class="pill" type="button" data-prompt="Show macro calculator card">📊 Macro Calculator</button>
-    <button class="pill" type="button" data-prompt="Find nearby gyms on map">🗺️ Gym Finder Map</button>
   </div>
   <form id="form">
     <div class="input-wrapper">
@@ -443,11 +443,14 @@ const settingsModal = document.getElementById("settings-modal");
 const settingsBtn = document.getElementById("settings-btn");
 const settingsCloseBtn = document.getElementById("settings-close-btn");
 const settingsForm = document.getElementById("settings-form");
+const exportDataBtn = document.getElementById("export-data-btn");
 
 const historyModal = document.getElementById("history-modal");
 const historyCloseBtn = document.getElementById("history-close-btn");
-const statsBarBtn = document.getElementById("stats-bar-btn");
+const btnOpenLog = document.getElementById("btn-open-log");
+const btnWaterTrack = document.getElementById("btn-water-track");
 const historyList = document.getElementById("history-list");
+const statWater = document.getElementById("stat-water");
 
 // Lightbox
 const lightboxModal = document.getElementById("lightbox-modal");
@@ -465,22 +468,27 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
+// --- Water Tracker State ---
+let waterIntakeLiters = 1.75;
+function updateWaterUI() {
+  statWater.textContent = `${waterIntakeLiters.toFixed(2)}L / 3.0L`;
+}
+
 // --- Athlete Profile Preferences ---
 let userProfile = {
   goal: "HIIT Endurance & Cardio",
   equip: "Full Commercial Gym Access",
   diet: "High Protein Balanced",
+  ttsRate: "1.0",
   injury: "None"
 };
 
 function loadSettings() {
   const saved = localStorage.getItem("nova_profile");
-  if (saved) {
-    try { userProfile = JSON.parse(saved); } catch(e) {}
-  }
+  if (saved) { try { userProfile = JSON.parse(saved); } catch(e) {} }
   document.getElementById("set-goal").value = userProfile.goal;
   document.getElementById("set-equip").value = userProfile.equip;
-  document.getElementById("set-diet").value = userProfile.diet;
+  document.getElementById("set-tts-rate").value = userProfile.ttsRate || "1.0";
   document.getElementById("set-injury").value = userProfile.injury || "";
 }
 
@@ -492,12 +500,26 @@ settingsForm.addEventListener("submit", (ev) => {
   userProfile = {
     goal: document.getElementById("set-goal").value,
     equip: document.getElementById("set-equip").value,
-    diet: document.getElementById("set-diet").value,
+    ttsRate: document.getElementById("set-tts-rate").value,
     injury: document.getElementById("set-injury").value
   };
   localStorage.setItem("nova_profile", JSON.stringify(userProfile));
   settingsModal.classList.add("hidden");
   showToast("Athlete profile updated!");
+});
+
+// JSON Backup Download
+exportDataBtn.addEventListener("click", () => {
+  const backupData = {
+    user: localStorage.getItem("nova_user") || "Guest",
+    profile: userProfile,
+    waterIntakeLiters: waterIntakeLiters,
+    exportDate: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = `novasmart-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); showToast("Backup downloaded!");
 });
 
 // --- Workout History Drawer ---
@@ -519,7 +541,8 @@ function renderHistory() {
   });
 }
 
-statsBarBtn.addEventListener("click", () => { renderHistory(); historyModal.classList.remove("hidden"); });
+btnOpenLog.addEventListener("click", () => { renderHistory(); historyModal.classList.remove("hidden"); });
+btnWaterTrack.addEventListener("click", () => { submitPrompt("Show Hydration Tracker card"); });
 historyCloseBtn.addEventListener("click", () => historyModal.classList.add("hidden"));
 
 // --- Auth Handling ---
@@ -619,17 +642,17 @@ function renderWelcomeHero() {
         <div class="feature-card-title">🏃 Workouts & Routines</div>
         <div class="feature-card-desc">Custom training plans tailored to your goals.</div>
       </div>
-      <div class="feature-card" data-prompt="Show 5-Zone Target Heart Rate card">
-        <div class="feature-card-title">❤️ 5-Zone Heart Rate</div>
-        <div class="feature-card-desc">Calculate Fat Burn and Peak cardio zones.</div>
+      <div class="feature-card" data-prompt="Show Body Mass Index & Fat % card">
+        <div class="feature-card-title">📐 BMI & Body Fat</div>
+        <div class="feature-card-desc">Calculate body composition and BMR.</div>
       </div>
-      <div class="feature-card" data-prompt="Show macro calculator card">
-        <div class="feature-card-title">📊 Macro Calculator</div>
-        <div class="feature-card-desc">Calculate TDEE and target protein/carbs/fat.</div>
+      <div class="feature-card" data-prompt="Show Exercise Substitution Finder card">
+        <div class="feature-card-title">🔄 Exercise Substitutes</div>
+        <div class="feature-card-desc">Find equipment or injury alternatives.</div>
       </div>
-      <div class="feature-card" data-prompt="Find nearby gyms on map">
-        <div class="feature-card-title">🗺️ Gym Finder Map</div>
-        <div class="feature-card-desc">Locate local gyms on an interactive map.</div>
+      <div class="feature-card" data-prompt="Show Hydration Tracker card">
+        <div class="feature-card-title">💧 Hydration Tracker</div>
+        <div class="feature-card-desc">Track daily fluid intake and targets.</div>
       </div>
     </div>
   `;
@@ -639,7 +662,7 @@ function renderWelcomeHero() {
 function removeWelcomeHero() { const hero = log.querySelector(".welcome-hero"); if (hero) hero.remove(); }
 clearBtn.addEventListener("click", () => renderWelcomeHero());
 
-// --- Speech Recognition ---
+// --- Speech Recognition & TTS ---
 if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = new SpeechRec();
@@ -670,7 +693,13 @@ function bubble(who) {
     const speakBtn = el("button", "msg-action-btn", "Read");
     speakBtn.innerHTML = `<span class="material-symbols-outlined">volume_up</span> Read`;
     speakBtn.addEventListener("click", () => {
-      if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(b.innerText)); showToast("Reading aloud..."); }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(b.innerText);
+        utter.rate = parseFloat(userProfile.ttsRate || "1.0");
+        window.speechSynthesis.speak(utter);
+        showToast("Reading aloud (" + utter.rate + "x speed)...");
+      }
     });
 
     const printBtn = el("button", "msg-action-btn", "Print PDF");
@@ -691,30 +720,117 @@ function bubble(who) {
 
 function showTypingIndicator() { const b = bubble("agent"); b.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`; return b; }
 
-// --- 5-Zone Target Heart Rate Card Renderer ---
+// --- WATER INTAKE TRACKER CARD ---
+function renderWaterCard(container) {
+  const card = el("div", "water-card");
+  card.innerHTML = `
+    <div style="font-weight:800;font-size:1rem;color:#3b82f6;display:flex;align-items:center;gap:0.4rem">💧 Daily Hydration Tracker</div>
+    <div style="font-size:1.5rem;font-weight:800;color:var(--text-primary);text-align:center" id="wcard-disp">${waterIntakeLiters.toFixed(2)} L / 3.00 L</div>
+    <div class="water-progress-bg"><div class="water-progress-fill" id="wcard-bar" style="width:${Math.min(100, (waterIntakeLiters/3.0)*100)}%"></div></div>
+    <div style="display:flex;gap:0.5rem;justify-content:center">
+      <button type="button" class="timer-btn" id="wbtn-250">+250 ml</button>
+      <button type="button" class="timer-btn" id="wbtn-500">+500 ml</button>
+      <button type="button" class="timer-btn" id="wbtn-reset" style="background:var(--border);color:var(--text-primary)">Reset</button>
+    </div>
+  `;
+  container.appendChild(card);
+  const disp = card.querySelector("#wcard-disp"); const bar = card.querySelector("#wcard-bar");
+  card.querySelector("#wbtn-250").addEventListener("click", () => { waterIntakeLiters += 0.25; update(); });
+  card.querySelector("#wbtn-500").addEventListener("click", () => { waterIntakeLiters += 0.50; update(); });
+  card.querySelector("#wbtn-reset").addEventListener("click", () => { waterIntakeLiters = 0; update(); });
+  function update() {
+    disp.textContent = `${waterIntakeLiters.toFixed(2)} L / 3.00 L`;
+    bar.style.width = `${Math.min(100, (waterIntakeLiters/3.0)*100)}%`;
+    updateWaterUI(); showToast("Hydration logged!");
+  }
+}
+
+// --- BMI & BODY FAT CALCULATOR CARD ---
+function renderBMICard(container) {
+  const card = el("div", "bmi-card");
+  card.innerHTML = `
+    <div style="font-weight:800;font-size:1rem;color:var(--accent);display:flex;align-items:center;gap:0.4rem">📐 BMI & Body Fat % Calculator</div>
+    <div class="macro-slider-group"><div class="macro-slider-header"><span>Weight (kg)</span><span id="bmival-weight">72</span></div><input type="range" min="40" max="150" value="72" class="macro-slider" id="bmislider-weight"></div>
+    <div class="macro-slider-group"><div class="macro-slider-header"><span>Height (cm)</span><span id="bmival-height">176</span></div><input type="range" min="140" max="210" value="176" class="macro-slider" id="bmislider-height"></div>
+    <div class="macro-results">
+      <div><div class="macro-box-val" id="bmi-score">23.2</div><div class="macro-box-lbl">BMI Score</div></div>
+      <div><div class="macro-box-val" id="bmi-status" style="color:#10b981">Normal</div><div class="macro-box-lbl">Category</div></div>
+      <div><div class="macro-box-val" id="bmi-bmr">1,680</div><div class="macro-box-lbl">BMR (kcal)</div></div>
+    </div>
+    <button type="button" class="timer-btn" id="bmi-send-btn" style="width:100%;justify-content:center;margin-top:0.4rem">💬 Send Body Composition to Coach</button>
+  `;
+  container.appendChild(card);
+  const wSlider = card.querySelector("#bmislider-weight"); const hSlider = card.querySelector("#bmislider-height");
+  const wVal = card.querySelector("#bmival-weight"); const hVal = card.querySelector("#bmival-height");
+  const scoreVal = card.querySelector("#bmi-score"); const statusVal = card.querySelector("#bmi-status"); const bmrVal = card.querySelector("#bmi-bmr");
+
+  function calc() {
+    const w = parseInt(wSlider.value); const h = parseInt(hSlider.value);
+    wVal.textContent = w; hVal.textContent = h;
+    const bmi = (w / ((h/100) * (h/100))).toFixed(1);
+    scoreVal.textContent = bmi;
+    const bmr = Math.round(10 * w + 6.25 * h - 5 * 30 + 5);
+    bmrVal.textContent = bmr.toLocaleString();
+    if (bmi < 18.5) { statusVal.textContent = "Underweight"; statusVal.style.color = "#3b82f6"; }
+    else if (bmi < 25) { statusVal.textContent = "Normal / Fit"; statusVal.style.color = "#10b981"; }
+    else if (bmi < 30) { statusVal.textContent = "Overweight"; statusVal.style.color = "#f59e0b"; }
+    else { statusVal.textContent = "High Risk"; statusVal.style.color = "#ef4444"; }
+  }
+  wSlider.addEventListener("input", calc); hSlider.addEventListener("input", calc); calc();
+  card.querySelector("#bmi-send-btn").addEventListener("click", () => {
+    submitPrompt(`My BMI score is ${scoreVal.textContent} (${statusVal.textContent}) and BMR is ${bmrVal.textContent} kcal. Recommend a body composition optimization routine.`);
+  });
+}
+
+// --- EXERCISE SUBSTITUTION FINDER CARD ---
+function renderSubCard(container) {
+  const card = el("div", "sub-card");
+  card.innerHTML = `
+    <div style="font-weight:800;font-size:1rem;color:var(--accent);display:flex;align-items:center;gap:0.4rem">🔄 Exercise Substitution Finder</div>
+    <div class="input-field-group">
+      <label>Target Exercise</label>
+      <select id="sub-ex" class="settings-select">
+        <option value="Barbell Bench Press">🏋️ Barbell Bench Press</option>
+        <option value="Barbell Back Squat">🦵 Barbell Back Squat</option>
+        <option value="Pull-Ups / Chin-Ups">💪 Pull-Ups / Chin-Ups</option>
+        <option value="Barbell Overhead Press">🏋️ Overhead Shoulder Press</option>
+      </select>
+    </div>
+    <div class="input-field-group">
+      <label>Constraint / Limitation</label>
+      <select id="sub-limit" class="settings-select">
+        <option value="No Barbell / Home Equipment">🏠 Home Dumbbells Only</option>
+        <option value="Knee Joint Caution">🦵 Knee Caution</option>
+        <option value="Wrist / Shoulder Caution">💪 Shoulder Caution</option>
+      </select>
+    </div>
+    <div id="sub-result-box" style="background:var(--bg-main);border:1px solid var(--border);border-radius:12px;padding:0.75rem;font-size:0.85rem;font-weight:600;color:var(--text-primary)"></div>
+  `;
+  container.appendChild(card);
+  const exSelect = card.querySelector("#sub-ex"); const limSelect = card.querySelector("#sub-limit"); const box = card.querySelector("#sub-result-box");
+  const map = {
+    "Barbell Bench Press": "💡 Substitute: Dumbbell Chest Press or Push-Ups with 2-sec pause at bottom.",
+    "Barbell Back Squat": "💡 Substitute: Goblet Dumbbell Squats or Romanian Split Squats with lighter weight.",
+    "Pull-Ups / Chin-Ups": "💡 Substitute: Inverted Bodyweight Rows or Dumbbell Single-Arm Rows.",
+    "Barbell Overhead Press": "💡 Substitute: Seated Dumbbell Shoulder Press or Resistance Band Overhead Press."
+  };
+  function update() { box.textContent = map[exSelect.value] || "💡 Substitute: Dumbbell alternative with controlled tempo."; }
+  exSelect.addEventListener("change", update); limSelect.addEventListener("change", update); update();
+}
+
+// --- 5-ZONE HR CARD & GYM MAP ---
 function renderHRZoneCard(container) {
   const card = el("div", "hr-zone-card");
   card.innerHTML = `
     <div style="font-weight:800;font-size:1rem;color:var(--accent);display:flex;align-items:center;gap:0.4rem">❤️ 5-Zone Target Heart Rate Calculator</div>
-    <div class="macro-slider-group">
-      <div class="macro-slider-header"><span>Your Age</span><span id="hr-age-val">30</span></div>
-      <input type="range" min="15" max="80" value="30" class="macro-slider" id="hr-age-slider">
-    </div>
+    <div class="macro-slider-group"><div class="macro-slider-header"><span>Your Age</span><span id="hr-age-val">30</span></div><input type="range" min="15" max="80" value="30" class="macro-slider" id="hr-age-slider"></div>
     <div class="zone-spectrum" id="zone-list"></div>
-    <button type="button" class="timer-btn" id="hr-send-btn" style="width:100%;justify-content:center;margin-top:0.4rem">
-      💬 Send Heart Rate Zones to Coach
-    </button>
+    <button type="button" class="timer-btn" id="hr-send-btn" style="width:100%;justify-content:center;margin-top:0.4rem">💬 Send Heart Rate Zones to Coach</button>
   `;
   container.appendChild(card);
-
-  const slider = card.querySelector("#hr-age-slider");
-  const ageVal = card.querySelector("#hr-age-val");
-  const zoneList = card.querySelector("#zone-list");
-
+  const slider = card.querySelector("#hr-age-slider"); const ageVal = card.querySelector("#hr-age-val"); const zoneList = card.querySelector("#zone-list");
   function calcZones() {
-    const age = parseInt(slider.value);
-    ageVal.textContent = age;
-    const maxHR = 220 - age;
+    const age = parseInt(slider.value); ageVal.textContent = age; const maxHR = 220 - age;
     zoneList.innerHTML = `
       <div class="zone-row z1"><span>Zone 1 (Recovery 50-60%)</span><span>${Math.round(maxHR*0.5)}-${Math.round(maxHR*0.6)} BPM</span></div>
       <div class="zone-row z2"><span>Zone 2 (Fat Burn 60-70%)</span><span>${Math.round(maxHR*0.6)}-${Math.round(maxHR*0.7)} BPM</span></div>
@@ -723,15 +839,12 @@ function renderHRZoneCard(container) {
       <div class="zone-row z5"><span>Zone 5 (Peak 90-100%)</span><span>${Math.round(maxHR*0.9)}-${maxHR} BPM</span></div>
     `;
   }
-  slider.addEventListener("input", calcZones);
-  calcZones();
-
+  slider.addEventListener("input", calcZones); calcZones();
   card.querySelector("#hr-send-btn").addEventListener("click", () => {
     submitPrompt(`I am ${slider.value} years old with max HR ${220 - parseInt(slider.value)} BPM. Design a Zone 2 fat-burn cardio session for me.`);
   });
 }
 
-// --- Gym Finder Map Renderer (Leaflet) ---
 function renderGymMapCard(container) {
   const card = el("div", "gym-map-card");
   card.innerHTML = `
@@ -739,71 +852,16 @@ function renderGymMapCard(container) {
     <div id="map-element"></div>
   `;
   container.appendChild(card);
-
   setTimeout(() => {
     const map = L.map('map-element').setView([37.7749, -122.4194], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
-
     const gyms = [
       { name: "Equinox Fitness", lat: 37.788, lng: -122.401, desc: "Luxury gym with pool & sauna" },
       { name: "Fitness SF Market", lat: 37.776, lng: -122.417, desc: "Full squat racks & turf" },
       { name: "Crunch Fitness", lat: 37.765, lng: -122.420, desc: "Group classes & free weights" }
     ];
-
-    gyms.forEach(g => {
-      L.marker([g.lat, g.lng]).addTo(map).bindPopup(`<b>${g.name}</b><br>${g.desc}`);
-    });
+    gyms.forEach(g => L.marker([g.lat, g.lng]).addTo(map).bindPopup(`<b>${g.name}</b><br>${g.desc}`));
   }, 200);
-}
-
-// Interactive Timer & Macro Card Functions
-function renderTimerWidget(container, seconds = 60) {
-  const widget = el("div", "timer-widget");
-  let left = seconds; let timerId = null;
-  widget.innerHTML = `
-    <div style="font-weight:700;font-size:0.85rem;color:var(--text-secondary)">⏱️ Workout Interval Timer</div>
-    <div class="timer-display" id="tdisplay">${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}</div>
-    <div class="timer-controls">
-      <button class="timer-btn" id="tstart"><span class="material-symbols-outlined">play_arrow</span> Start</button>
-      <button class="timer-btn" id="tpause" style="background:var(--border);color:var(--text-primary)"><span class="material-symbols-outlined">pause</span> Pause</button>
-    </div>
-  `;
-  container.appendChild(widget);
-  const disp = widget.querySelector("#tdisplay");
-  widget.querySelector("#tstart").addEventListener("click", () => {
-    if (timerId) return;
-    timerId = setInterval(() => {
-      if (left > 0) { left--; disp.textContent = `${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`; }
-      else { clearInterval(timerId); timerId = null; showToast("Timer finished! Great set!"); }
-    }, 1000);
-  });
-  widget.querySelector("#tpause").addEventListener("click", () => { if (timerId) { clearInterval(timerId); timerId = null; } });
-}
-
-function renderMacroCard(container) {
-  const card = el("div", "macro-card");
-  card.innerHTML = `
-    <div style="font-weight:800;font-size:1rem;color:var(--accent);display:flex;align-items:center;gap:0.4rem">📊 Calorie & Macro Calculator</div>
-    <div class="macro-slider-group"><div class="macro-slider-header"><span>Weight (kg)</span><span id="mval-weight">70</span></div><input type="range" min="40" max="150" value="70" class="macro-slider" id="mslider-weight"></div>
-    <div class="macro-slider-group"><div class="macro-slider-header"><span>Height (cm)</span><span id="mval-height">175</span></div><input type="range" min="140" max="210" value="175" class="macro-slider" id="mslider-height"></div>
-    <div class="macro-results"><div><div class="macro-box-val" id="mres-tdee">2,150</div><div class="macro-box-lbl">TDEE (kcal)</div></div><div><div class="macro-box-val" id="mres-protein">140g</div><div class="macro-box-lbl">Protein</div></div><div><div class="macro-box-val" id="mres-carbs">240g</div><div class="macro-box-lbl">Carbs</div></div></div>
-    <button type="button" class="timer-btn" id="macro-send-btn" style="width:100%;justify-content:center;margin-top:0.4rem">💬 Send Stats to Coach</button>
-  `;
-  container.appendChild(card);
-  const wSlider = card.querySelector("#mslider-weight"); const hSlider = card.querySelector("#mslider-height");
-  const wVal = card.querySelector("#mval-weight"); const hVal = card.querySelector("#mval-height");
-  const tdeeVal = card.querySelector("#mres-tdee"); const pVal = card.querySelector("#mres-protein"); const cVal = card.querySelector("#mres-carbs");
-
-  function calc() {
-    const w = parseInt(wSlider.value); const h = parseInt(hSlider.value);
-    wVal.textContent = w; hVal.textContent = h;
-    const tdee = Math.round((10 * w + 6.25 * h - 5 * 30 + 5) * 1.4);
-    tdeeVal.textContent = tdee.toLocaleString(); pVal.textContent = Math.round(w * 2) + "g"; cVal.textContent = Math.round(w * 3.5) + "g";
-  }
-  wSlider.addEventListener("input", calc); hSlider.addEventListener("input", calc);
-  card.querySelector("#macro-send-btn").addEventListener("click", () => {
-    submitPrompt(`My weight is ${wSlider.value}kg, height is ${hSlider.value}cm, estimated TDEE is ${tdeeVal.textContent} kcal. Create a custom meal & workout plan.`);
-  });
 }
 
 function renderReply(b, parts) {
@@ -822,7 +880,6 @@ function renderReply(b, parts) {
         }
       });
     }
-    if (/workout|hiit|routine|exercise|seconds|reps/i.test(textStr)) { renderTimerWidget(b, 60); }
   }
   if (!b.childNodes.length) b.textContent = "(no response)";
   log.scrollTop = log.scrollHeight;
@@ -830,13 +887,12 @@ function renderReply(b, parts) {
 
 function submitPrompt(text) {
   if (!text) return;
-  if (text.includes("Macro Calculator")) { removeWelcomeHero(); renderMacroCard(bubble("agent")); return; }
+  if (text.includes("Hydration Tracker")) { removeWelcomeHero(); renderWaterCard(bubble("agent")); return; }
+  if (text.includes("BMI & Body Fat")) { removeWelcomeHero(); renderBMICard(bubble("agent")); return; }
+  if (text.includes("Exercise Substitution")) { removeWelcomeHero(); renderSubCard(bubble("agent")); return; }
   if (text.includes("Heart Rate")) { removeWelcomeHero(); renderHRZoneCard(bubble("agent")); return; }
-  if (text.includes("Gym Finder Map")) { removeWelcomeHero(); renderGymMapCard(bubble("agent")); return; }
 
-  // Inject Athlete Profile Context into Prompt
-  const fullPrompt = `[Athlete Context: Goal: ${userProfile.goal}, Equip: ${userProfile.equip}, Diet: ${userProfile.diet}, Health: ${userProfile.injury}] ${text}`;
-
+  const fullPrompt = `[Athlete Context: Goal: ${userProfile.goal}, Equip: ${userProfile.equip}, Health: ${userProfile.injury}] ${text}`;
   input.value = text;
   if (typeof form.requestSubmit === "function") form.requestSubmit();
   else form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
@@ -850,8 +906,7 @@ form.addEventListener("submit", async (ev) => {
   input.value = "";
   const b = showTypingIndicator();
 
-  const fullPrompt = `[Athlete Context: Goal: ${userProfile.goal}, Equip: ${userProfile.equip}, Diet: ${userProfile.diet}, Health: ${userProfile.injury}] ${text}`;
-
+  const fullPrompt = `[Athlete Context: Goal: ${userProfile.goal}, Equip: ${userProfile.equip}, Health: ${userProfile.injury}] ${text}`;
   try {
     const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: fullPrompt }) });
     const raw = await res.text();
@@ -862,7 +917,7 @@ form.addEventListener("submit", async (ev) => {
 
 document.querySelectorAll(".pill").forEach(p => p.addEventListener("click", () => submitPrompt(p.dataset.prompt)));
 
-checkAuth(); initTheme(); renderWelcomeHero();
+checkAuth(); initTheme(); renderWelcomeHero(); updateWaterUI();
 </script>
 </body>
 </html>
