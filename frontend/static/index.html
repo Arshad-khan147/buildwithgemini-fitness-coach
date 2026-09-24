@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" id="theme-color-meta" content="#059669">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>NovaSmart Fitness Coach</title>
+<!-- Google Fonts: Plus Jakarta Sans & Material Symbols -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+<style>
+  :root {
+    --accent: #059669;
+    --accent-light: #10b981;
+    --accent-dark: #047857;
+    --accent-glow: rgba(16, 185, 129, 0.15);
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --pill-bg: #ffffff;
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 10px 25px -5px rgba(5, 150, 105, 0.15);
+  }
+
+  [data-theme="dark"] {
+    --accent: #10b981;
+    --accent-light: #34d399;
+    --accent-dark: #059669;
+    --accent-glow: rgba(52, 211, 153, 0.2);
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    --border: #334155;
+    --pill-bg: #1e293b;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 10px 25px -5px rgba(16, 185, 129, 0.25);
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  html {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    min-height: -webkit-fill-available;
+    overflow: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* --- Premium Header --- */
+  header {
+    background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+    color: #ffffff;
+    padding: max(0.9rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right)) 0.9rem max(1.25rem, env(safe-area-inset-left));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(5, 150, 105, 0.2);
+    z-index: 10;
+    flex-shrink: 0;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .brand-text {
+    min-width: 0;
+  }
+
+  .brand-title {
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: -0.02em;
+    margin: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .brand-subtitle {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 0.35rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background: #34d399;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #34d399;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+  }
+
+  .header-icon-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #ffffff;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+  }
+
+  .header-icon-btn:active {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(0.95);
+  }
+
+  .header-icon-btn .material-symbols-outlined {
+    font-size: 1.25rem;
+    color: #ffffff;
+  }
+
+  /* --- Dialogue Log --- */
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    padding: 1.25rem 1rem;
+    max-width: 840px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    scroll-behavior: smooth;
+  }
+
+  /* --- Welcome Hero Card --- */
+  .welcome-hero {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.5rem 1.25rem;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 0.5rem;
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+
+  .welcome-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.65rem;
+    margin: 0 auto 0.85rem;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .welcome-hero h2 {
+    margin: 0 0 0.4rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  .welcome-hero p {
+    margin: 0 0 1.15rem;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .welcome-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+    text-align: left;
+  }
+
+  .feature-card {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.85rem 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+    min-height: 48px;
+  }
+
+  .feature-card:active {
+    border-color: var(--accent);
+    transform: scale(0.98);
+    background: var(--accent-glow);
+  }
+
+  .feature-card-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--accent);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .feature-card-desc {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* --- Dialogue Message Rows --- */
+  .msg-row {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    width: 100%;
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-row.user {
+    flex-direction: row-reverse;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .msg-row.agent .avatar {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+  }
+
+  .msg-row.user .avatar {
+    background: var(--border);
+    color: var(--text-secondary);
+  }
+
+  .msg-content {
+    display: flex;
+    flex-direction: column;
+    max-width: 88%;
+  }
+
+  .msg-row.user .msg-content {
+    align-items: flex-end;
+  }
+
+  .bubble {
+    padding: 0.85rem 1.1rem;
+    border-radius: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    box-shadow: var(--shadow-sm);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .msg-row.agent .bubble {
+    border-top-left-radius: 4px;
+  }
+
+  .msg-row.user .bubble {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: #ffffff;
+    border: none;
+    border-top-right-radius: 4px;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .bubble.rich {
+    background: transparent;
+    border: none;
+    padding: 0;
+    max-width: 100%;
+    white-space: normal;
+    box-shadow: none;
+  }
+
+  /* --- Typing Indicator --- */
+  .typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.6rem 0.9rem;
+  }
+  .typing-dots span {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+  }
+  .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+  .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1.0); }
+  }
+
+  /* --- A2UI Cards & Components --- */
+  .a2card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.1rem;
+    background: var(--bg-card);
+    box-shadow: var(--shadow-md);
+    max-width: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: 0.75rem; }
+  .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
+  .a2row { display: flex; flex-direction: row; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  
+  .a2text { margin: 0; line-height: 1.5; color: var(--text-primary); }
+  .a2text.a2-h1 { font-size: 1.3rem; font-weight: 800; color: var(--accent-dark); letter-spacing: -0.02em; }
+  .a2text.a2-h2 { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+  .a2text.a2-h3 { font-size: 1rem; font-weight: 600; color: var(--accent); }
+  .a2text.a2-h4 { font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); }
+  .a2text.a2-caption { font-size: 0.78rem; color: var(--text-muted); }
+  
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.6rem 0; width: 100%; }
+  .a2img { max-width: 100%; height: auto; border-radius: 12px; display: block; box-shadow: var(--shadow-sm); }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.35rem; line-height: 1; vertical-align: middle; color: var(--accent); }
+
+  .clickable-card-item {
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+  .clickable-card-item:active {
+    color: var(--accent);
+  }
+
+  /* --- Bottom Controls & Example Prompts --- */
+  .bottom-container {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    max-width: 840px;
+    width: 100%;
+    margin: 0 auto;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
+    transition: background 0.3s ease, border-color 0.3s ease;
+    flex-shrink: 0;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+  }
+
+  #examples {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 0.35rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    scrollbar-width: none;
+  }
+  #examples::-webkit-scrollbar { display: none; }
+
+  .pill {
+    background: var(--bg-main);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 0.55rem 0.95rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    touch-action: manipulation;
+    flex-shrink: 0;
+    min-height: 40px;
+  }
+
+  .pill:active {
+    background: var(--accent-glow);
+    color: var(--accent-dark);
+    border-color: var(--accent-light);
+    transform: scale(0.96);
+  }
+
+  form {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem 0.6rem;
+    align-items: center;
+  }
+
+  .input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  /* 16px font size prevents Android Chrome & iOS Safari auto-zoom on input focus */
+  input {
+    width: 100%;
+    padding: 0.85rem 3rem 0.85rem 1.1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 24px;
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    min-height: 48px;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 4px var(--accent-glow);
+  }
+
+  .mic-btn {
+    position: absolute;
+    right: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+  }
+
+  .mic-btn.listening {
+    color: #ef4444;
+    animation: pulseRed 1.5s infinite;
+  }
+
+  @keyframes pulseRed {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  button#send-btn {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-lg);
+    flex-shrink: 0;
+    touch-action: manipulation;
+  }
+
+  button#send-btn:active {
+    transform: scale(0.92);
+  }
+
+  button#send-btn .material-symbols-outlined {
+    color: #ffffff;
+    font-size: 1.25rem;
+  }
+
+  /* --- Android & Mobile Media Queries --- */
+  @media (max-width: 640px) {
+    header {
+      padding-left: max(0.9rem, env(safe-area-inset-left));
+      padding-right: max(0.9rem, env(safe-area-inset-right));
+    }
+    .brand-title { font-size: 1.05rem; }
+    .brand-subtitle { font-size: 0.7rem; }
+    .status-badge span { display: none; }
+    .status-badge { padding: 0.35rem 0.45rem; }
+    
+    #log {
+      padding: 1rem 0.75rem;
+      gap: 1rem;
+    }
+
+    .msg-content { max-width: 90%; }
+    .bubble { font-size: 0.92rem; padding: 0.75rem 1rem; }
+
+    .welcome-hero {
+      padding: 1.25rem 1rem;
+    }
+    .welcome-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .bottom-container {
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+    }
+
+    form {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+  }
+
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .welcome-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="brand-icon">⚡</div>
+    <div class="brand-text">
+      <h1 class="brand-title">NovaSmart Fitness Coach</h1>
+      <p class="brand-subtitle">AI Health & Workout Assistant</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span>Online</span>
+    </div>
+    <button id="theme-btn" class="header-icon-btn" title="Toggle Dark/Light Mode">
+      <span class="material-symbols-outlined">dark_mode</span>
+    </button>
+    <button id="clear-btn" class="header-icon-btn" title="Clear Conversation">
+      <span class="material-symbols-outlined">delete_sweep</span>
+    </button>
+  </div>
+</header>
+
+<div id="log"></div>
+
+<div class="bottom-container">
+  <div id="examples">
+    <button class="pill" type="button" data-prompt="Suggest a 30-min beginner HIIT workout">🏃 30-min HIIT Workout</button>
+    <button class="pill" type="button" data-prompt="Calculate my target heart rate zones for age 30">❤️ Heart Rate Zones</button>
+    <button class="pill" type="button" data-prompt="Find nearby gyms in San Francisco">🏋️ Find Nearby Gyms</button>
+  </div>
+  <form id="form">
+    <div class="input-wrapper">
+      <input id="input" placeholder="Ask about workouts, exercises, or heart rate zones…" autocomplete="off" autofocus>
+      <button id="mic-btn" type="button" class="mic-btn" title="Voice Input">
+        <span class="material-symbols-outlined">mic</span>
+      </button>
+    </div>
+    <button id="send-btn" type="submit" title="Send message">
+      <span class="material-symbols-outlined">send</span>
+    </button>
+  </form>
+</div>
+
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const themeBtn = document.getElementById("theme-btn");
+const clearBtn = document.getElementById("clear-btn");
+const micBtn = document.getElementById("mic-btn");
+const themeColorMeta = document.getElementById("theme-color-meta");
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+// --- Android & iOS Visual Viewport Keyboard Handling ---
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => {
+    log.scrollTop = log.scrollHeight;
+  });
+}
+
+// --- Feature 1: Dark / Light Mode ---
+function initTheme() {
+  const saved = localStorage.getItem("theme");
+  if (saved === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+    themeBtn.querySelector(".material-symbols-outlined").textContent = "light_mode";
+    if (themeColorMeta) themeColorMeta.setAttribute("content", "#0f172a");
+  } else {
+    if (themeColorMeta) themeColorMeta.setAttribute("content", "#059669");
+  }
+}
+
+themeBtn.addEventListener("click", () => {
+  const current = document.documentElement.getAttribute("data-theme");
+  if (current === "dark") {
+    document.documentElement.removeAttribute("data-theme");
+    localStorage.setItem("theme", "light");
+    themeBtn.querySelector(".material-symbols-outlined").textContent = "dark_mode";
+    if (themeColorMeta) themeColorMeta.setAttribute("content", "#059669");
+  } else {
+    document.documentElement.setAttribute("data-theme", "dark");
+    localStorage.setItem("theme", "dark");
+    themeBtn.querySelector(".material-symbols-outlined").textContent = "light_mode";
+    if (themeColorMeta) themeColorMeta.setAttribute("content", "#0f172a");
+  }
+});
+
+// --- Feature 2: Welcome Hero Card ---
+function renderWelcomeHero() {
+  log.innerHTML = "";
+  const hero = el("div", "welcome-hero");
+  hero.innerHTML = `
+    <div class="welcome-icon">⚡</div>
+    <h2>Welcome to NovaSmart Fitness Coach!</h2>
+    <p>I can help you search workout routines, calculate heart rate zones, generate exercise diagrams, and find nearby gyms.</p>
+    <div class="welcome-grid">
+      <div class="feature-card" data-prompt="Suggest a 30-min beginner HIIT workout">
+        <div class="feature-card-title">🏃 Workouts & Routines</div>
+        <div class="feature-card-desc">Custom training plans tailored to your fitness goals.</div>
+      </div>
+      <div class="feature-card" data-prompt="Calculate my target heart rate zones for age 30">
+        <div class="feature-card-title">❤️ Heart Rate Zones</div>
+        <div class="feature-card-desc">Calculate fat-burn and aerobic training zones.</div>
+      </div>
+      <div class="feature-card" data-prompt="Find nearby gyms in San Francisco">
+        <div class="feature-card-title">🏋️ Nearby Gyms</div>
+        <div class="feature-card-desc">Locate local fitness centers and sports facilities.</div>
+      </div>
+      <div class="feature-card" data-prompt="Show me how to do pushups with a diagram">
+        <div class="feature-card-title">📊 Visual Diagrams</div>
+        <div class="feature-card-desc">Generate step-by-step exercise guides.</div>
+      </div>
+    </div>
+  `;
+  log.appendChild(hero);
+
+  hero.querySelectorAll("[data-prompt]").forEach(card => {
+    card.addEventListener("click", () => submitPrompt(card.dataset.prompt));
+  });
+}
+
+function removeWelcomeHero() {
+  const hero = log.querySelector(".welcome-hero");
+  if (hero) hero.remove();
+}
+
+// --- Feature 3: Clear Chat ---
+clearBtn.addEventListener("click", () => {
+  renderWelcomeHero();
+});
+
+// --- Feature 4: Speech Recognition ---
+let recognition = null;
+if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRec();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    micBtn.classList.add("listening");
+    micBtn.querySelector(".material-symbols-outlined").textContent = "graphic_eq";
+  };
+  recognition.onend = () => {
+    micBtn.classList.remove("listening");
+    micBtn.querySelector(".material-symbols-outlined").textContent = "mic";
+  };
+  recognition.onresult = (ev) => {
+    const transcript = ev.results[0][0].transcript;
+    input.value = transcript;
+    input.focus();
+  };
+
+  micBtn.addEventListener("click", () => {
+    if (micBtn.classList.contains("listening")) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  });
+} else {
+  micBtn.style.display = "none";
+}
+
+// --- Dialogue Bubble & Renderer ---
+function bubble(who) {
+  removeWelcomeHero();
+  const row = el("div", "msg-row " + who);
+  const avatar = el("div", "avatar", who === "agent" ? "⚡" : "👤");
+  const content = el("div", "msg-content");
+  const b = el("div", "bubble");
+  
+  content.appendChild(b);
+  row.appendChild(avatar);
+  row.appendChild(content);
+  log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+  return b;
+}
+
+function showTypingIndicator() {
+  const b = bubble("agent");
+  b.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+  return b;
+}
+
+function boundStr(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v.literalString === "string") return v.literalString;
+  return "";
+}
+
+function childIds(props) {
+  const ids = [];
+  if (props && typeof props.child === "string") ids.push(props.child);
+  const ch = props && props.children;
+  if (ch && Array.isArray(ch.explicitList)) for (const c of ch.explicitList) if (typeof c === "string") ids.push(c);
+  return ids;
+}
+
+function iconName(n) { return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase(); }
+
+function buildNode(id, comps, seen) {
+  if (!id || seen.has(id)) return null;
+  seen.add(id);
+  const spec = comps[id];
+  if (!spec || typeof spec !== "object") return null;
+  const type = Object.keys(spec)[0];
+  const props = spec[type] || {};
+  const kids = () => childIds(props).map(cid => buildNode(cid, comps, seen)).filter(Boolean);
+
+  switch (type) {
+    case "Card": {
+      const d = el("div", "a2card"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Column":
+    case "List": {
+      const horizontal = type === "List" && props.direction === "horizontal";
+      const d = el("div", horizontal ? "a2row" : "a2col"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Row": {
+      const d = el("div", "a2row" + (props.distribution === "spaceBetween" ? " between" : ""));
+      kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Text": {
+      const t = el("div", "a2text");
+      const hint = String(props.usageHint || "body").toLowerCase();
+      if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(hint)) t.classList.add("a2-" + hint);
+      else if (hint === "caption") t.classList.add("a2-caption");
+      t.textContent = boundStr(props.text);
+      
+      // Feature 5: Interactive Card Items
+      if (t.textContent.length > 5 && !hint.startsWith("h")) {
+        t.classList.add("clickable-card-item");
+        t.addEventListener("click", () => submitPrompt(t.textContent));
+      }
+      return t;
+    }
+    case "Divider":
+      return el("hr", "a2divider");
+    case "Image": {
+      const src = boundStr(props.url || props.src);
+      if (!/^https?:\/\//i.test(src)) return null;
+      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || ""; return img;
+    }
+    case "Icon": {
+      const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
+    }
+    default:
+      return null;
+  }
+}
+
+function renderSurface(messages, container) {
+  const comps = {};
+  const roots = [];
+  for (const m of messages) {
+    if (m.beginRendering && typeof m.beginRendering.root === "string") roots.push(m.beginRendering.root);
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
+  }
+  let rootIds = roots.filter(r => comps[r]);
+  if (rootIds.length === 0) {
+    const referenced = new Set();
+    for (const id in comps) { const spec = comps[id]; childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c)); }
+    rootIds = Object.keys(comps).filter(id => !referenced.has(id));
+  }
+  let drew = false;
+  for (const rid of rootIds) { const node = buildNode(rid, comps, new Set()); if (node) { container.appendChild(node); drew = true; } }
+  return drew;
+}
+
+function flattenText(messages) {
+  const out = [];
+  for (const m of messages) {
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.component && c.component.Text) out.push(boundStr(c.component.Text.text));
+  }
+  return out.join("\n").trim();
+}
+
+function renderReply(b, parts) {
+  b.textContent = "";
+  const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
+  const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
+
+  const textStr = texts.join("\n").trim();
+  if (textStr) b.appendChild(el("div", null, textStr));
+
+  if (a2ui.length) {
+    b.classList.add("rich");
+    if (!renderSurface(a2ui, b)) b.appendChild(el("div", null, flattenText(a2ui) || "(no card content)"));
+  }
+  if (!b.childNodes.length) b.textContent = "(no response)";
+  log.scrollTop = log.scrollHeight;
+}
+
+function submitPrompt(text) {
+  if (!text) return;
+  input.value = text;
+  if (typeof form.requestSubmit === "function") {
+    form.requestSubmit();
+  } else {
+    form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+  }
+}
+
+form.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+  bubble("user").textContent = text;
+  input.value = "";
+  
+  const b = showTypingIndicator();
+  
+  try {
+    const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text }) });
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`Server returned non-JSON (HTTP ${res.status}). ${raw.slice(0, 300)}`); }
+    renderReply(b, data.parts || []);
+  } catch (e) {
+    b.textContent = "Error: " + e.message;
+  }
+});
+
+document.querySelectorAll(".pill").forEach(p => {
+  p.addEventListener("click", () => submitPrompt(p.dataset.prompt));
+});
+
+// Initialize Theme & Welcome Hero
+initTheme();
+renderWelcomeHero();
+</script>
+</body>
+</html>
