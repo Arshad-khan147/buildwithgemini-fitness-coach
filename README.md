@@ -49,17 +49,89 @@ The agent implementation in this repository includes the following capabilities:
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## 🛠️ System Architecture & Data Flow
 
-* **Framework**: Google Agent Development Kit (ADK)
-* **LLM Engine**: Gemini Flash (`gemini-flash-latest`) & Vertex AI Reasoning Engine (Agent Runtime)
-* **Image & Video Generation**: Vertex AI Imagen 3 (`imagen-3.0-generate-002`) & Gemini Omni (`gemini-omni-flash-preview`)
-* **Long-Term Memory**: Vertex AI Memory Bank
-* **Database & Storage**: Google Cloud Firestore & Google Cloud Storage
-* **Location Services**: Google Maps Places API & Geocoding API
-* **Backend Security**: HMAC-SHA256 JWT, SHA-256 Salted Hashing, Sliding-Window Rate Limiting
-* **Frontend Proxy**: FastAPI & Uvicorn with Vanilla JS / HTML5 CSS design system
-* **Automated Testing**: Python `unittest` suite (`frontend/tests/test_backend.py`)
+### 🏗️ High-Level System Topology
+
+```
++-----------------------------------------------------------------------------------+
+|                                  CLIENT LAYER                                     |
+|  [ Progressive Web App (PWA) / Desktop Browser / Mobile UI (Vanilla JS & HTML5) ]  |
++----------------------------------------+------------------------------------------+
+                                         |
+                                         | HTTP / REST (JWT Auth, Security Headers)
+                                         v
++-----------------------------------------------------------------------------------+
+|                             FASTAPI GATEWAY / PROXY                               |
+|  * Auth Verification (Firestore Salted SHA-256 + HMAC-SHA256 JWT Tokens)         |
+|  * Sliding-Window Rate Limiting (35 req/min per Client IP)                       |
+|  * A2UI Response & Media Payload Parser                                           |
++----------------------------------------+------------------------------------------+
+                                         |
+                                         | Vertex AI A2A Protocol / Reasoning Engine
+                                         v
++-----------------------------------------------------------------------------------+
+|                          GOOGLE AGENT DEVELOPMENT KIT (ADK)                       |
+|                               (Reasoning Engine)                                  |
+|                                                                                   |
+|   +-----------------------+   +----------------------+   +--------------------+   |
+|   |  PreloadMemoryTool    |   |  Imagen 3 Tool       |   | Gemini Omni Tool   |   |
+|   | (Vertex Memory Bank)  |   | (Exercise Diagrams)  |   | (Demo Videos)      |   |
+|   +-----------+-----------+   +----------+-----------+   +---------+----------+   |
+|               |                          |                         |              |
+|               |                          |                         |              |
+|               v                          v                         v              |
+|   +-----------------------+   +----------------------+   +--------------------+   |
+|   | Google Cloud          |   | Google Cloud         |   | Google Maps        |   |
+|   | Firestore DB          |   | Storage (GCS)        |   | Places API         |   |
+|   +-----------------------+   +----------------------+   +--------------------+   |
++-----------------------------------------------------------------------------------+
+```
+
+---
+
+### 🔄 End-to-End Execution Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Athlete as Athlete / User
+    participant WebApp as Web Frontend (PWA)
+    participant Gateway as FastAPI Gateway (Cloud Run)
+    participant AuthDB as Google Cloud Firestore
+    participant ADKAgent as ADK Agent (Vertex Reasoning Engine)
+    participant MemBank as Vertex AI Memory Bank
+    participant Imagen as Imagen 3 / GCS Storage
+
+    Athlete->>WebApp: Submit Prompt / Workout Request
+    WebApp->>Gateway: POST /chat (Include Authorization JWT)
+    Gateway->>Gateway: Validate HMAC-SHA256 Token & Rate Limits
+    Gateway->>ADKAgent: Forward Prompt + Athlete Profile Context
+    ADKAgent->>MemBank: Fetch Athlete Historical Preferences & Goals
+    ADKAgent->>AuthDB: Query Exercise & Routine Database
+    alt Visual Diagram Requested
+        ADKAgent->>Imagen: Generate Exercise Form Diagram
+        Imagen-->>ADKAgent: Return GCS Public Media URL
+    end
+    ADKAgent-->>Gateway: Return A2UI Response Cards & Media Parts
+    Gateway-->>WebApp: JSON Payload (Parts + A2UI Components)
+    WebApp->>WebApp: Render UI Bubble, Diagram Lightbox & Rest Timer
+    WebApp-->>Athlete: Display Interactive Workout Plan & Timer Widget
+```
+
+---
+
+### 🧱 Core Architectural Components
+
+| Component Layer | Technology | Primary Function |
+| :--- | :--- | :--- |
+| **Frontend UI** | HTML5, Vanilla CSS, JS, Leaflet | Responsive PWA chat UI with Athlete Settings, Training Log, 5-Zone HR card, Leaflet Gym map, Water Tracker, BMI calculator, Exercise substitute finder, and printable PDF exporter. |
+| **Backend Gateway** | FastAPI, Uvicorn, Python 3.11+ | Stateless API proxy managing authentication, rate limiting middleware, session tokens, and forwarding requests to Vertex Reasoning Engine. |
+| **Agent Reasoning Engine**| Google Agent Development Kit (ADK) | Orchestrates LLM logic (`gemini-flash-latest`), tool execution, callback handlers, and A2UI card generation. |
+| **User Authentication** | SHA-256 + HMAC Salt, JWT, Firestore | Secure client registration & login with salted password hashing and signed JWT session tokens stored in Firestore `app_users`. |
+| **Long-Term Memory** | Vertex AI Memory Bank | Cross-session memory bank automatically persisting athlete fitness goals, injuries, and preferences across sessions. |
+| **Media Generation** | Imagen 3 & Gemini Omni | Real-time generation of anatomical exercise diagrams (`imagen-3.0-generate-002`) uploaded to GCS buckets. |
+| **Database & Storage** | Google Cloud Firestore & GCS | Document database for workout routines and logs; object storage for exercise image/video media assets. |
 
 ---
 
