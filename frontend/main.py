@@ -1,32 +1,8 @@
-"""Minimal FastAPI proxy for a deployed A2A agent (Agent Runtime, agents-cli 1.1.0+).
-
-The browser talks ONLY to this proxy (same origin, no CORS, no GCP creds in the
-browser). The proxy authenticates with Application Default Credentials and
-forwards chat to the deployed agent over the A2A protocol, returning replies as
-structured parts the chat UI knows how to show:
-
-  * {"kind": "text", "text": ...}  -> a normal chat bubble
-  * {"kind": "a2ui", "data": ...}  -> one A2UI message (beginRendering /
-    surfaceUpdate); static/index.html renders these as a card.
-
-Why A2A: agents-cli 1.1.0 (GA) deploys ADK agents to Agent Runtime as A2A agents
-and no longer registers the reasoning-engine operation schema the old
-`agent_engines.get(...).stream_query()` path relied on (operation_schemas() comes
-back empty). The container serves the A2A protocol over the Agent Engine HTTP
-passthrough, so this proxy fetches the agent's card and sends messages with the
-a2a-sdk client (the same path `agents-cli run --mode a2a` uses). This works for
-both A2A and plain ADK 1.1.0 deployments (the container serves A2A either way).
-
-Run:
-  pip install -r requirements.txt
-  export AGENT_ENGINE_RESOURCE_NAME="projects/.../locations/.../reasoningEngines/..."
-  export AGENT_DIRECTORY="app"   # your agent's app directory (agents-cli-manifest.yaml)
-  python main.py                 # -> http://localhost:8080
-"""
+"""Minimal FastAPI proxy for a deployed A2A agent with Registered User Verification."""
 
 import os
 import uuid
-
+import datetime
 import google.auth
 import google.auth.transport.requests
 import httpx
@@ -47,27 +23,19 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 RESOURCE = os.environ["AGENT_ENGINE_RESOURCE_NAME"]
-# The agent's app directory (matches agent_directory in agents-cli-manifest.yaml).
 AGENT_DIRECTORY = os.environ.get("AGENT_DIRECTORY", "app")
-# Location is embedded in the resource name: projects/<p>/locations/<loc>/reasoningEngines/<id>.
 LOCATION = RESOURCE.split("/locations/")[1].split("/")[0]
 
-# A2A endpoint for an Agent Runtime deployment, via the Agent Engine HTTP
-# passthrough. The card lives at the well-known path under this base.
 A2A_BASE = (
     f"https://{LOCATION}-aiplatform.googleapis.com/reasoningEngines/v1/"
     f"{RESOURCE}/api/a2a/{AGENT_DIRECTORY}"
 )
 A2A_CARD_URL = f"{A2A_BASE}/.well-known/agent-card.json"
-
-# The agent tags its A2UI data parts with this mime type.
 _A2UI_MIME = "application/json+a2ui"
 
-# One set of ADC credentials, refreshed per request (access tokens expire ~1h).
 _creds, _ = google.auth.default(
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
 )
-
 
 def _auth_headers() -> dict[str, str]:
     _creds.refresh(google.auth.transport.requests.Request())
@@ -76,16 +44,28 @@ def _auth_headers() -> dict[str, str]:
         "Content-Type": "application/json",
     }
 
+# Registered Users Database (Firestore with in-memory fallback)
+FIRESTORE_PROJECT = os.environ.get("FIRESTORE_PROJECT", "qwiklabs-gcp-02-6a284814c841")
+_firestore_db = None
+try:
+    from google.cloud import firestore
+    _firestore_db = firestore.Client(project=FIRESTORE_PROJECT)
+except Exception:
+    pass
+
+# Seed default demo account
+_local_users = {
+    "alex.runner@example.com": {
+        "email": "alex.runner@example.com",
+        "name": "Alex Runner",
+        "password": "fitness2026",
+    }
+}
 
 app = FastAPI()
 
-
 @app.exception_handler(Exception)
 async def _json_errors(request: Request, exc: Exception):
-    # Always return JSON so the browser never receives a plain-text 500 page
-    # (which shows up in the chat as "Unexpected token 'I', "Internal S"... is
-    # not valid JSON"). Any server-side failure now surfaces as a readable
-    # message in the chat bubble instead.
     return JSONResponse(
         status_code=200,
         content={
@@ -93,12 +73,8 @@ async def _json_errors(request: Request, exc: Exception):
         },
     )
 
-
-# Reuse ONE A2A context per user so the agent remembers the conversation.
 _contexts: dict[str, str] = {}
-# Cache the agent card after the first fetch.
 _card: AgentCard | None = None
-
 
 async def _get_card(client: httpx.AsyncClient) -> AgentCard:
     global _card
@@ -106,27 +82,16 @@ async def _get_card(client: httpx.AsyncClient) -> AgentCard:
         resp = await client.get(A2A_CARD_URL)
         resp.raise_for_status()
         card = AgentCard(**resp.json())
-        # Agent Runtime does not serve a public card URL, so point the client at
-        # the passthrough base for message sends.
         card.url = A2A_BASE
         _card = card
     return _card
-
 
 import json
 import re
 
 _DATAPART_RE = re.compile(r"<a2a_datapart_json>(.*?)</a2a_datapart_json>", re.DOTALL)
 
-
 def _extract_parts(parts: list) -> list[dict]:
-    """Turn A2A response parts into structured parts for the chat UI.
-
-    Text parts pass through as {"kind": "text"}. A2UI data parts (tagged
-    application/json+a2ui or wrapped in <a2a_datapart_json>) become {"kind":
-    "a2ui", "data": <message>} so the UI renders the card; each data part is one
-    A2UI message (beginRendering or surfaceUpdate).
-    """
     out: list[dict] = []
     for p in parts:
         root = getattr(p, "root", p)
@@ -162,6 +127,91 @@ def _extract_parts(parts: list) -> list[dict]:
                 out.append({"kind": "text", "text": uri})
     return out
 
+
+# --- USER AUTHENTICATION & REGISTRATION ENDPOINTS ---
+
+@app.post("/auth/register")
+async def register_user(req: Request):
+    body = await req.json()
+    email = body.get("email", "").strip().lower()
+    password = body.get("password", "").strip()
+    name = body.get("name", "").strip() or email.split("@")[0]
+
+    if not email or not password:
+        return JSONResponse(status_code=400, content={"error": "Email and password are required."})
+
+    # Check if user exists in Firestore
+    if _firestore_db:
+        try:
+            doc_ref = _firestore_db.collection("app_users").document(email)
+            doc = doc_ref.get()
+            if doc.exists:
+                return JSONResponse(status_code=400, content={"error": "This email is already registered! Please sign in instead."})
+            
+            user_data = {
+                "email": email,
+                "name": name,
+                "password": password,
+                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            }
+            doc_ref.set(user_data)
+            return JSONResponse({"success": True, "message": "Registration successful!", "user": {"email": email, "name": name}})
+        except Exception as e:
+            pass
+
+    # Fallback local store check
+    if email in _local_users:
+        return JSONResponse(status_code=400, content={"error": "This email is already registered! Please sign in instead."})
+    
+    _local_users[email] = {"email": email, "name": name, "password": password}
+    return JSONResponse({"success": True, "message": "Registration successful!", "user": {"email": email, "name": name}})
+
+
+@app.post("/auth/login")
+async def login_user(req: Request):
+    body = await req.json()
+    email = body.get("email", "").strip().lower()
+    password = body.get("password", "").strip()
+
+    if not email or not password:
+        return JSONResponse(status_code=400, content={"error": "Email and password are required."})
+
+    # Verify user in Firestore
+    if _firestore_db:
+        try:
+            doc_ref = _firestore_db.collection("app_users").document(email)
+            doc = doc_ref.get()
+            if not doc.exists:
+                return JSONResponse(
+                    status_code=401,
+                    content={"error": f"No registered account found for '{email}'. Please click 'Register' to create your account first!"}
+                )
+            
+            user_data = doc.to_dict()
+            if user_data.get("password") != password:
+                return JSONResponse(status_code=401, content={"error": "Incorrect password. Please check your password and try again."})
+
+            return JSONResponse({
+                "success": True,
+                "user": {"email": email, "name": user_data.get("name", email.split("@")[0])}
+            })
+        except Exception:
+            pass
+
+    # Fallback local store check
+    if email not in _local_users:
+        return JSONResponse(
+            status_code=401,
+            content={"error": f"No registered account found for '{email}'. Please click 'Register' to create your account first!"}
+        )
+
+    if _local_users[email]["password"] != password:
+        return JSONResponse(status_code=401, content={"error": "Incorrect password. Please check your password and try again."})
+
+    return JSONResponse({
+        "success": True,
+        "user": {"email": email, "name": _local_users[email]["name"]}
+    })
 
 
 @app.post("/chat")
@@ -211,7 +261,6 @@ async def chat(req: Request):
                     if role not in (Role.user, "user"):
                         parts.extend(_extract_parts(msg_obj.parts))
 
-        # Fallback: pull parts from the task history or artifacts if streaming didn't collect reply parts
         if not parts and last_task is not None:
             history = getattr(last_task, "history", None) or []
             for hmsg in reversed(history):
@@ -232,13 +281,8 @@ async def chat(req: Request):
     return JSONResponse({"parts": parts})
 
 
-
-
-# Serve the chat UI (keep this mount last so /chat wins).
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
-
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

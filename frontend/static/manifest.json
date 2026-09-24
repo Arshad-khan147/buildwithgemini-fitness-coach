@@ -1,0 +1,17 @@
+{
+  "name": "NovaSmart Fitness Coach",
+  "short_name": "NovaSmart",
+  "description": "AI-Powered Personal Health and Fitness Coach",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

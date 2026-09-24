@@ -7,17 +7,23 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>NovaSmart Fitness Coach</title>
+
+<!-- Favicon & PWA Manifest -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="manifest" href="/manifest.json">
+
 <!-- Google Fonts: Plus Jakarta Sans & Material Symbols -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
 <style>
   :root {
     --accent: #059669;
     --accent-light: #10b981;
     --accent-dark: #047857;
-    --accent-glow: rgba(16, 185, 129, 0.15);
+    --accent-glow: rgba(16, 185, 129, 0.18);
     --bg-main: #f8fafc;
     --bg-card: #ffffff;
     --text-primary: #0f172a;
@@ -27,14 +33,14 @@
     --pill-bg: #ffffff;
     --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
     --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-    --shadow-lg: 0 10px 25px -5px rgba(5, 150, 105, 0.15);
+    --shadow-lg: 0 10px 25px -5px rgba(5, 150, 105, 0.2);
   }
 
   [data-theme="dark"] {
     --accent: #10b981;
     --accent-light: #34d399;
     --accent-dark: #059669;
-    --accent-glow: rgba(52, 211, 153, 0.2);
+    --accent-glow: rgba(52, 211, 153, 0.22);
     --bg-main: #0f172a;
     --bg-card: #1e293b;
     --text-primary: #f8fafc;
@@ -44,7 +50,7 @@
     --pill-bg: #1e293b;
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 10px 25px -5px rgba(16, 185, 129, 0.25);
+    --shadow-lg: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
   }
 
   * {
@@ -61,7 +67,7 @@
 
   body {
     margin: 0;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, Roboto, sans-serif;
     background: var(--bg-main);
     color: var(--text-primary);
     display: flex;
@@ -73,11 +79,198 @@
     transition: background 0.3s ease, color 0.3s ease;
   }
 
-  /* --- Premium Header --- */
+  /* --- AUTH / LOGIN OVERLAY --- */
+  #auth-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  #auth-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .auth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2rem 1.75rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    animation: authSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes authSlideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .auth-logo {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1rem;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .auth-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0 0 0.3rem;
+    color: var(--text-primary);
+  }
+
+  .auth-subtitle {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin: 0 0 1.5rem;
+  }
+
+  .auth-tabs {
+    display: flex;
+    background: var(--bg-main);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--border);
+  }
+
+  .auth-tab {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .auth-tab.active {
+    background: var(--bg-card);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    text-align: left;
+  }
+
+  .input-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .input-field-group label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .auth-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    font-size: 0.95rem;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .auth-input:focus {
+    border-color: var(--accent);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 4px var(--accent-glow);
+  }
+
+  .auth-submit-btn {
+    width: 100%;
+    padding: 0.85rem;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    transition: transform 0.15s ease, opacity 0.2s ease;
+    margin-top: 0.3rem;
+  }
+
+  .auth-submit-btn:active {
+    transform: scale(0.98);
+  }
+
+  .guest-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.15rem 0;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .guest-divider::before, .guest-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .guest-btn {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1.5px dashed var(--accent);
+    border-radius: 14px;
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .guest-btn:active {
+    transform: scale(0.98);
+    background: var(--accent);
+    color: #ffffff;
+  }
+
+  /* --- Premium Header & Quick Stats --- */
   header {
     background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
     color: #ffffff;
-    padding: max(0.9rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right)) 0.9rem max(1.25rem, env(safe-area-inset-left));
+    padding: max(0.8rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right)) 0.8rem max(1.25rem, env(safe-area-inset-left));
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -94,8 +287,8 @@
   }
 
   .brand-icon {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -103,95 +296,71 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     flex-shrink: 0;
   }
 
-  .brand-text {
-    min-width: 0;
-  }
-
+  .brand-text { min-width: 0; }
   .brand-title {
-    font-weight: 800;
-    font-size: 1.15rem;
-    letter-spacing: -0.02em;
-    margin: 0;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; margin: 0; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-
   .brand-subtitle {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.85);
-    font-weight: 500;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); font-weight: 500; margin: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
     flex-shrink: 0;
   }
 
-  .status-badge {
+  .user-badge {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    padding: 0.35rem 0.65rem;
+    padding: 0.3rem 0.65rem;
     border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    background: #34d399;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #34d399;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.2); opacity: 0.7; }
+    font-size: 0.78rem;
+    font-weight: 700;
   }
 
   .header-icon-btn {
     background: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: #ffffff;
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    min-height: 42px;
-    border-radius: 50%;
+    border: none; color: #ffffff;
+    width: 38px; height: 38px; min-width: 38px; min-height: 38px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s ease; touch-action: manipulation;
+  }
+  .header-icon-btn:active { background: rgba(255, 255, 255, 0.35); transform: scale(0.95); }
+  .header-icon-btn .material-symbols-outlined { font-size: 1.2rem; color: #ffffff; }
+
+  /* Quick Session Stats Subheader */
+  .quick-stats-bar {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 0.45rem 1rem;
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    touch-action: manipulation;
+    justify-content: space-around;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    flex-shrink: 0;
   }
 
-  .header-icon-btn:active {
-    background: rgba(255, 255, 255, 0.35);
-    transform: scale(0.95);
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
   }
 
-  .header-icon-btn .material-symbols-outlined {
-    font-size: 1.25rem;
-    color: #ffffff;
-  }
+  .stat-item strong { color: var(--accent); }
 
   /* --- Dialogue Log --- */
   #log {
@@ -222,416 +391,365 @@
   }
 
   .welcome-icon {
-    width: 50px;
-    height: 50px;
+    width: 50px; height: 50px;
     background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    color: #ffffff;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.65rem;
-    margin: 0 auto 0.85rem;
-    box-shadow: var(--shadow-lg);
+    color: #ffffff; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.65rem; margin: 0 auto 0.85rem; box-shadow: var(--shadow-lg);
   }
 
-  .welcome-hero h2 {
-    margin: 0 0 0.4rem;
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--text-primary);
-  }
-
-  .welcome-hero p {
-    margin: 0 0 1.15rem;
-    font-size: 0.88rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-  }
+  .welcome-hero h2 { margin: 0 0 0.4rem; font-size: 1.25rem; font-weight: 800; color: var(--text-primary); }
+  .welcome-hero p { margin: 0 0 1.15rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; }
 
   .welcome-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 0.75rem;
-    text-align: left;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; text-align: left;
   }
 
   .feature-card {
-    background: var(--bg-main);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 0.85rem 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    touch-action: manipulation;
-    min-height: 48px;
+    background: var(--bg-main); border: 1px solid var(--border); border-radius: 14px;
+    padding: 0.85rem 0.9rem; cursor: pointer; transition: all 0.2s ease; touch-action: manipulation; min-height: 48px;
   }
+  .feature-card:active { border-color: var(--accent); transform: scale(0.98); background: var(--accent-glow); }
+  .feature-card-title { font-weight: 700; font-size: 0.85rem; color: var(--accent); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.35rem; }
+  .feature-card-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
 
-  .feature-card:active {
-    border-color: var(--accent);
-    transform: scale(0.98);
-    background: var(--accent-glow);
-  }
-
-  .feature-card-title {
-    font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--accent);
-    margin-bottom: 0.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
-  .feature-card-desc {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    line-height: 1.4;
-  }
-
-  /* --- Dialogue Message Rows --- */
+  /* --- Dialogue Message Rows & Actions --- */
   .msg-row {
-    display: flex;
-    gap: 0.65rem;
-    align-items: flex-start;
-    width: 100%;
+    display: flex; gap: 0.65rem; align-items: flex-start; width: 100%;
     animation: fadeIn 0.3s ease-out forwards;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  .msg-row.user {
-    flex-direction: row-reverse;
-  }
+  .msg-row.user { flex-direction: row-reverse; }
 
   .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-    box-shadow: var(--shadow-sm);
+    width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0; box-shadow: var(--shadow-sm);
   }
+  .msg-row.agent .avatar { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #ffffff; }
+  .msg-row.user .avatar { background: var(--border); color: var(--text-secondary); }
 
-  .msg-row.agent .avatar {
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    color: #ffffff;
-  }
-
-  .msg-row.user .avatar {
-    background: var(--border);
-    color: var(--text-secondary);
-  }
-
-  .msg-content {
-    display: flex;
-    flex-direction: column;
-    max-width: 88%;
-  }
-
-  .msg-row.user .msg-content {
-    align-items: flex-end;
-  }
+  .msg-content { display: flex; flex-direction: column; max-width: 88%; gap: 0.35rem; }
+  .msg-row.user .msg-content { align-items: flex-end; }
 
   .bubble {
-    padding: 0.85rem 1.1rem;
-    border-radius: 18px;
+    padding: 0.85rem 1.1rem; border-radius: 18px; background: var(--bg-card); border: 1px solid var(--border);
+    color: var(--text-primary); font-size: 0.95rem; line-height: 1.5; box-shadow: var(--shadow-sm);
+    white-space: pre-wrap; word-break: break-word; position: relative;
+  }
+  .msg-row.agent .bubble { border-top-left-radius: 4px; }
+  .msg-row.user .bubble {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: none;
+    border-top-right-radius: 4px; box-shadow: var(--shadow-lg);
+  }
+
+  .bubble.rich { background: transparent; border: none; padding: 0; max-width: 100%; white-space: normal; box-shadow: none; }
+
+  /* Message Action Buttons (Copy & Speech) */
+  .msg-actions {
+    display: flex;
+    gap: 0.4rem;
+    align-self: flex-start;
+  }
+  .msg-action-btn {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    box-shadow: var(--shadow-sm);
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  .msg-row.agent .bubble {
-    border-top-left-radius: 4px;
-  }
-
-  .msg-row.user .bubble {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    color: #ffffff;
-    border: none;
-    border-top-right-radius: 4px;
-    box-shadow: var(--shadow-lg);
-  }
-
-  .bubble.rich {
-    background: transparent;
-    border: none;
-    padding: 0;
-    max-width: 100%;
-    white-space: normal;
-    box-shadow: none;
-  }
-
-  /* --- Typing Indicator --- */
-  .typing-dots {
+    color: var(--text-muted);
+    border-radius: 12px;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 0.6rem 0.9rem;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
   }
-  .typing-dots span {
-    width: 6px;
-    height: 6px;
+  .msg-action-btn:active { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
+  .msg-action-btn .material-symbols-outlined { font-size: 0.95rem; }
+
+  /* --- Interactive Workout Timer Widget --- */
+  .timer-widget {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .timer-display {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: monospace;
+    letter-spacing: 0.05em;
+  }
+
+  .timer-controls {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .timer-btn {
+    border: none;
     background: var(--accent);
-    border-radius: 50%;
+    color: #ffffff;
+    padding: 0.45rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  /* --- Interactive Macro Calculator Card --- */
+  .macro-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.1rem;
+    margin-top: 0.5rem;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .macro-card-title {
+    font-weight: 800; font-size: 1rem; color: var(--accent); display: flex; align-items: center; gap: 0.4rem;
+  }
+
+  .macro-slider-group {
+    display: flex; flex-direction: column; gap: 0.3rem;
+  }
+  .macro-slider-header {
+    display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);
+  }
+  .macro-slider {
+    width: 100%; accent-color: var(--accent); cursor: pointer;
+  }
+
+  .macro-results {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;
+    background: var(--bg-main); padding: 0.65rem; border-radius: 12px; border: 1px solid var(--border);
+  }
+
+  .macro-box-val { font-weight: 800; font-size: 1rem; color: var(--accent-dark); }
+  .macro-box-lbl { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+
+  /* --- Lightbox Modal for Images & Omni Videos --- */
+  #lightbox-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  #lightbox-modal.active { opacity: 1; visibility: visible; }
+
+  .lightbox-content {
+    max-width: 90vw;
+    max-height: 80vh;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+
+  .lightbox-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    color: #ffffff;
+  }
+
+  .lightbox-btn {
+    background: transparent; border: none; color: #ffffff; cursor: pointer; display: flex; align-items: center;
+  }
+
+  /* --- Typing Indicator & Audio Waveform --- */
+  .typing-dots { display: flex; align-items: center; gap: 4px; padding: 0.6rem 0.9rem; }
+  .typing-dots span {
+    width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
     animation: bounce 1.4s infinite ease-in-out both;
   }
   .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
   .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
-  @keyframes bounce {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1.0); }
+  @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+  .wave-bars {
+    display: flex; align-items: center; gap: 3px; height: 18px; margin-right: 4px;
   }
+  .wave-bar {
+    width: 3px; height: 100%; background: #ef4444; border-radius: 2px;
+    animation: wavePulse 1s infinite ease-in-out alternate;
+  }
+  .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+  .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+  .wave-bar:nth-child(4) { animation-delay: 0.6s; }
+  @keyframes wavePulse { from { height: 20%; } to { height: 100%; } }
 
   /* --- A2UI Cards & Components --- */
   .a2card {
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.1rem;
-    background: var(--bg-card);
-    box-shadow: var(--shadow-md);
-    max-width: 100%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid var(--border); border-radius: 16px; padding: 1.1rem; background: var(--bg-card);
+    box-shadow: var(--shadow-md); max-width: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .a2card + .a2card, .a2col > .a2card { margin-top: 0.75rem; }
   .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
   .a2row { display: flex; flex-direction: row; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
   .a2row.between { justify-content: space-between; }
-  
   .a2text { margin: 0; line-height: 1.5; color: var(--text-primary); }
   .a2text.a2-h1 { font-size: 1.3rem; font-weight: 800; color: var(--accent-dark); letter-spacing: -0.02em; }
   .a2text.a2-h2 { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
   .a2text.a2-h3 { font-size: 1rem; font-weight: 600; color: var(--accent); }
   .a2text.a2-h4 { font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); }
   .a2text.a2-caption { font-size: 0.78rem; color: var(--text-muted); }
-  
   .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.6rem 0; width: 100%; }
-  .a2img { max-width: 100%; height: auto; border-radius: 12px; display: block; box-shadow: var(--shadow-sm); }
+  .a2img { max-width: 100%; height: auto; border-radius: 12px; display: block; box-shadow: var(--shadow-sm); cursor: pointer; }
   .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.35rem; line-height: 1; vertical-align: middle; color: var(--accent); }
 
-  .clickable-card-item {
-    cursor: pointer;
-    transition: color 0.15s ease;
-  }
-  .clickable-card-item:active {
-    color: var(--accent);
-  }
-
-  /* --- Bottom Controls & Example Prompts --- */
+  /* --- Bottom Controls & Contextual Follow-Up Chips --- */
   .bottom-container {
-    background: var(--bg-card);
-    border-top: 1px solid var(--border);
-    max-width: 840px;
-    width: 100%;
-    margin: 0 auto;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
-    transition: background 0.3s ease, border-color 0.3s ease;
-    flex-shrink: 0;
+    background: var(--bg-card); border-top: 1px solid var(--border); max-width: 840px; width: 100%; margin: 0 auto;
+    border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
+    transition: background 0.3s ease, border-color 0.3s ease; flex-shrink: 0;
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
     padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
     padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
   }
 
   #examples {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem 0.35rem;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    justify-content: flex-start;
-    scrollbar-width: none;
+    display: flex; gap: 0.5rem; padding: 0.75rem 1rem 0.35rem; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    justify-content: flex-start; scrollbar-width: none;
   }
   #examples::-webkit-scrollbar { display: none; }
 
   .pill {
-    background: var(--bg-main);
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
-    padding: 0.55rem 0.95rem;
-    border-radius: 20px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    touch-action: manipulation;
-    flex-shrink: 0;
-    min-height: 40px;
+    background: var(--bg-main); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.55rem 0.95rem;
+    border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 0.35rem;
+    touch-action: manipulation; flex-shrink: 0; min-height: 40px;
   }
+  .pill:active { background: var(--accent-glow); color: var(--accent-dark); border-color: var(--accent-light); transform: scale(0.96); }
 
-  .pill:active {
-    background: var(--accent-glow);
-    color: var(--accent-dark);
-    border-color: var(--accent-light);
-    transform: scale(0.96);
-  }
+  form { display: flex; gap: 0.6rem; padding: 0.6rem 1rem 0.6rem; align-items: center; }
 
-  form {
-    display: flex;
-    gap: 0.6rem;
-    padding: 0.6rem 1rem 0.6rem;
-    align-items: center;
-  }
+  .input-wrapper { flex: 1; position: relative; display: flex; align-items: center; }
 
-  .input-wrapper {
-    flex: 1;
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  /* 16px font size prevents Android Chrome & iOS Safari auto-zoom on input focus */
   input {
-    width: 100%;
-    padding: 0.85rem 3rem 0.85rem 1.1rem;
-    border: 1.5px solid var(--border);
-    border-radius: 24px;
-    font-size: 16px;
-    font-family: inherit;
-    outline: none;
-    transition: all 0.2s ease;
-    background: var(--bg-main);
-    color: var(--text-primary);
-    min-height: 48px;
+    width: 100%; padding: 0.85rem 5.2rem 0.85rem 1.1rem; border: 1.5px solid var(--border); border-radius: 24px;
+    font-size: 16px; font-family: inherit; outline: none; transition: all 0.2s ease; background: var(--bg-main);
+    color: var(--text-primary); min-height: 48px;
+  }
+  input:focus { border-color: var(--accent); background: var(--bg-card); box-shadow: 0 0 0 4px var(--accent-glow); }
+
+  .input-actions-right {
+    position: absolute; right: 6px; display: flex; align-items: center; gap: 2px;
   }
 
-  input:focus {
-    border-color: var(--accent);
-    background: var(--bg-card);
-    box-shadow: 0 0 0 4px var(--accent-glow);
+  .input-icon-btn {
+    background: transparent; border: none; color: var(--text-muted); width: 38px; height: 38px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: all 0.2s ease; touch-action: manipulation;
   }
-
-  .mic-btn {
-    position: absolute;
-    right: 6px;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    touch-action: manipulation;
-  }
-
-  .mic-btn.listening {
-    color: #ef4444;
-    animation: pulseRed 1.5s infinite;
-  }
-
-  @keyframes pulseRed {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-  }
+  .input-icon-btn:active { color: var(--accent); }
 
   button#send-btn {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
-    border: none;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: var(--shadow-lg);
-    flex-shrink: 0;
-    touch-action: manipulation;
+    width: 48px; height: 48px; min-width: 48px; min-height: 48px; border: none; border-radius: 50%;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #ffffff; display: flex; align-items: center;
+    justify-content: center; cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow-lg); flex-shrink: 0;
   }
+  button#send-btn:active { transform: scale(0.92); }
+  button#send-btn .material-symbols-outlined { color: #ffffff; font-size: 1.25rem; }
 
-  button#send-btn:active {
-    transform: scale(0.92);
+  /* Toast Notification */
+  #toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(15, 23, 42, 0.9); color: #ffffff; padding: 0.6rem 1.2rem; border-radius: 20px;
+    font-size: 0.82rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); opacity: 0;
+    pointer-events: none; transition: all 0.3s ease; z-index: 3000; display: flex; align-items: center; gap: 0.4rem;
   }
-
-  button#send-btn .material-symbols-outlined {
-    color: #ffffff;
-    font-size: 1.25rem;
-  }
-
-  /* --- Android & Mobile Media Queries --- */
-  @media (max-width: 640px) {
-    header {
-      padding-left: max(0.9rem, env(safe-area-inset-left));
-      padding-right: max(0.9rem, env(safe-area-inset-right));
-    }
-    .brand-title { font-size: 1.05rem; }
-    .brand-subtitle { font-size: 0.7rem; }
-    .status-badge span { display: none; }
-    .status-badge { padding: 0.35rem 0.45rem; }
-    
-    #log {
-      padding: 1rem 0.75rem;
-      gap: 1rem;
-    }
-
-    .msg-content { max-width: 90%; }
-    .bubble { font-size: 0.92rem; padding: 0.75rem 1rem; }
-
-    .welcome-hero {
-      padding: 1.25rem 1rem;
-    }
-    .welcome-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .bottom-container {
-      border-top-left-radius: 16px;
-      border-top-right-radius: 16px;
-    }
-
-    form {
-      padding-left: 0.75rem;
-      padding-right: 0.75rem;
-    }
-  }
-
-  @media (min-width: 641px) and (max-width: 1024px) {
-    .welcome-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
+<!-- AUTH / LOGIN OVERLAY MODAL -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">⚡</div>
+    <h2 class="auth-title">NovaSmart Fitness</h2>
+    <p class="auth-subtitle">Sign in to sync your AI workouts & session history</p>
+
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" id="tab-login">Sign In</button>
+      <button type="button" class="auth-tab" id="tab-signup">Register</button>
+    </div>
+
+    <form class="auth-form" id="auth-form">
+      <div id="auth-error-msg" style="display:none;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;padding:0.65rem 0.85rem;border-radius:12px;font-size:0.8rem;font-weight:600;line-height:1.4"></div>
+      <div class="input-field-group">
+        <label for="auth-email">Email or Username</label>
+        <input type="text" id="auth-email" class="auth-input" placeholder="user@novasmart.ai" required value="alex.runner@example.com">
+      </div>
+      <div class="input-field-group">
+        <label for="auth-pass">Password</label>
+        <input type="password" id="auth-pass" class="auth-input" placeholder="••••••••" required value="fitness2026">
+      </div>
+      <button type="submit" class="auth-submit-btn" id="auth-btn-text">Sign In to Account</button>
+    </form>
+
+    <div class="guest-divider">OR</div>
+    <button type="button" class="guest-btn" id="guest-btn">⚡ Continue as Guest / Demo Mode</button>
+  </div>
+</div>
+
+<!-- MEDIA LIGHTBOX MODAL -->
+<div id="lightbox-modal">
+  <div id="lightbox-container" class="lightbox-content"></div>
+  <div class="lightbox-controls">
+    <button class="lightbox-btn" id="lightbox-speed-btn">1.0x Speed</button>
+    <button class="lightbox-btn" id="lightbox-download-btn"><span class="material-symbols-outlined">download</span> Download</button>
+    <button class="lightbox-btn" id="lightbox-close-btn"><span class="material-symbols-outlined">close</span> Close</button>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast"><span class="material-symbols-outlined" style="color:#34d399">check_circle</span> <span id="toast-text">Action completed</span></div>
+
+<!-- HEADER -->
 <header>
   <div class="header-brand">
     <div class="brand-icon">⚡</div>
     <div class="brand-text">
-      <h1 class="brand-title">NovaSmart Fitness Coach</h1>
+      <h1 class="brand-title">NovaSmart Fitness</h1>
       <p class="brand-subtitle">AI Health & Workout Assistant</p>
     </div>
   </div>
   <div class="header-actions">
-    <div class="status-badge">
-      <div class="status-dot"></div>
-      <span>Online</span>
+    <div class="user-badge" id="user-badge-display">
+      👤 <span id="user-name-txt">Guest</span>
     </div>
     <button id="theme-btn" class="header-icon-btn" title="Toggle Dark/Light Mode">
       <span class="material-symbols-outlined">dark_mode</span>
@@ -639,23 +757,42 @@
     <button id="clear-btn" class="header-icon-btn" title="Clear Conversation">
       <span class="material-symbols-outlined">delete_sweep</span>
     </button>
+    <button id="logout-btn" class="header-icon-btn" title="Sign Out">
+      <span class="material-symbols-outlined">logout</span>
+    </button>
   </div>
 </header>
 
+<!-- QUICK STATS SUBHEADER -->
+<div class="quick-stats-bar">
+  <div class="stat-item">🏋️ Workouts: <strong id="stat-workouts">3 Logged</strong></div>
+  <div class="stat-item">❤️ Target HR: <strong id="stat-hr">130-165 BPM</strong></div>
+  <div class="stat-item">⚡ Mode: <strong>Vertex AI Memory</strong></div>
+</div>
+
+<!-- DIALOGUE LOG -->
 <div id="log"></div>
 
+<!-- BOTTOM CONTROLS & PROMPTS -->
 <div class="bottom-container">
   <div id="examples">
-    <button class="pill" type="button" data-prompt="Suggest a 30-min beginner HIIT workout">🏃 30-min HIIT Workout</button>
-    <button class="pill" type="button" data-prompt="Calculate my target heart rate zones for age 30">❤️ Heart Rate Zones</button>
-    <button class="pill" type="button" data-prompt="Find nearby gyms in San Francisco">🏋️ Find Nearby Gyms</button>
+    <button class="pill" type="button" data-prompt="Suggest a 30-min beginner HIIT workout">🏃 30-min HIIT</button>
+    <button class="pill" type="button" data-prompt="Calculate my target heart rate zones for age 30">❤️ Heart Rate</button>
+    <button class="pill" type="button" data-prompt="Show macro calculator card">📊 Macro Calculator</button>
+    <button class="pill" type="button" data-prompt="Find nearby gyms in San Francisco">🏋️ Gym Finder</button>
   </div>
   <form id="form">
     <div class="input-wrapper">
-      <input id="input" placeholder="Ask about workouts, exercises, or heart rate zones…" autocomplete="off" autofocus>
-      <button id="mic-btn" type="button" class="mic-btn" title="Voice Input">
-        <span class="material-symbols-outlined">mic</span>
-      </button>
+      <input id="input" placeholder="Ask about workouts, exercises, or heart rate zones…" autocomplete="off">
+      <input type="file" id="file-input" accept="image/*" style="display:none">
+      <div class="input-actions-right">
+        <button id="attach-btn" type="button" class="input-icon-btn" title="Attach Image">
+          <span class="material-symbols-outlined">add_photo_alternate</span>
+        </button>
+        <button id="mic-btn" type="button" class="input-icon-btn" title="Voice Input">
+          <span class="material-symbols-outlined">mic</span>
+        </button>
+      </div>
     </div>
     <button id="send-btn" type="submit" title="Send message">
       <span class="material-symbols-outlined">send</span>
@@ -670,26 +807,143 @@ const input = document.getElementById("input");
 const themeBtn = document.getElementById("theme-btn");
 const clearBtn = document.getElementById("clear-btn");
 const micBtn = document.getElementById("mic-btn");
+const attachBtn = document.getElementById("attach-btn");
+const fileInput = document.getElementById("file-input");
 const themeColorMeta = document.getElementById("theme-color-meta");
+
+// Auth Elements
+const authOverlay = document.getElementById("auth-overlay");
+const authForm = document.getElementById("auth-form");
+const authEmail = document.getElementById("auth-email");
+const guestBtn = document.getElementById("guest-btn");
+const logoutBtn = document.getElementById("logout-btn");
+const userNameTxt = document.getElementById("user-name-txt");
+const tabLogin = document.getElementById("tab-login");
+const tabSignup = document.getElementById("tab-signup");
+const authBtnText = document.getElementById("auth-btn-text");
+
+// Lightbox Elements
+const lightboxModal = document.getElementById("lightbox-modal");
+const lightboxContainer = document.getElementById("lightbox-container");
+const lightboxCloseBtn = document.getElementById("lightbox-close-btn");
+const lightboxSpeedBtn = document.getElementById("lightbox-speed-btn");
+const lightboxDownloadBtn = document.getElementById("lightbox-download-btn");
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
-// --- Android & iOS Visual Viewport Keyboard Handling ---
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  document.getElementById("toast-text").textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
+// --- Visual Viewport Keyboard Handling ---
 if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", () => {
     log.scrollTop = log.scrollHeight;
   });
 }
 
-// --- Feature 1: Dark / Light Mode ---
+// --- AUTH / USER MANAGEMENT ---
+function checkAuth() {
+  const savedUser = localStorage.getItem("nova_user");
+  if (savedUser) {
+    userNameTxt.textContent = savedUser.split("@")[0];
+    authOverlay.classList.add("hidden");
+  } else {
+    authOverlay.classList.remove("hidden");
+  }
+}
+
+const authErrorMsg = document.getElementById("auth-error-msg");
+let isRegisterMode = false;
+
+function showAuthError(msg) {
+  if (msg) {
+    authErrorMsg.textContent = msg;
+    authErrorMsg.style.display = "block";
+  } else {
+    authErrorMsg.style.display = "none";
+  }
+}
+
+tabLogin.addEventListener("click", () => {
+  isRegisterMode = false;
+  tabLogin.classList.add("active");
+  tabSignup.classList.remove("active");
+  authBtnText.textContent = "Sign In to Account";
+  showAuthError(null);
+});
+
+tabSignup.addEventListener("click", () => {
+  isRegisterMode = true;
+  tabSignup.classList.add("active");
+  tabLogin.classList.remove("active");
+  authBtnText.textContent = "Create Free Account";
+  showAuthError(null);
+});
+
+authForm.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  showAuthError(null);
+  const emailVal = authEmail.value.trim();
+  const passVal = document.getElementById("auth-pass").value.trim();
+
+  if (!emailVal || !passVal) {
+    showAuthError("Please fill in both email and password.");
+    return;
+  }
+
+  const endpoint = isRegisterMode ? "/auth/register" : "/auth/login";
+  authBtnText.textContent = "Verifying...";
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: emailVal, password: passVal })
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showAuthError(data.error || "Authentication failed.");
+      authBtnText.textContent = isRegisterMode ? "Create Free Account" : "Sign In to Account";
+      return;
+    }
+
+    const userName = data.user ? data.user.name : emailVal.split("@")[0];
+    localStorage.setItem("nova_user", emailVal);
+    userNameTxt.textContent = userName;
+    authOverlay.classList.add("hidden");
+    showToast(isRegisterMode ? "Account created & signed in!" : "Welcome back, " + userName + "!");
+  } catch (err) {
+    showAuthError("Network error contacting authentication server.");
+  } finally {
+    authBtnText.textContent = isRegisterMode ? "Create Free Account" : "Sign In to Account";
+  }
+});
+
+guestBtn.addEventListener("click", () => {
+  localStorage.setItem("nova_user", "Guest Athlete");
+  userNameTxt.textContent = "Guest";
+  authOverlay.classList.add("hidden");
+  showToast("Logged in as Guest Athlete");
+});
+
+logoutBtn.addEventListener("click", () => {
+  localStorage.removeItem("nova_user");
+  userNameTxt.textContent = "Guest";
+  authOverlay.classList.remove("hidden");
+});
+
+// --- Theme Controller ---
 function initTheme() {
   const saved = localStorage.getItem("theme");
   if (saved === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
     themeBtn.querySelector(".material-symbols-outlined").textContent = "light_mode";
     if (themeColorMeta) themeColorMeta.setAttribute("content", "#0f172a");
-  } else {
-    if (themeColorMeta) themeColorMeta.setAttribute("content", "#059669");
   }
 }
 
@@ -708,14 +962,53 @@ themeBtn.addEventListener("click", () => {
   }
 });
 
-// --- Feature 2: Welcome Hero Card ---
+// --- Lightbox Modal ---
+let activeMediaElement = null;
+let currentSpeedIndex = 1;
+const speeds = [0.5, 1.0, 1.25, 1.5, 2.0];
+
+function openLightbox(element) {
+  lightboxContainer.innerHTML = "";
+  const clone = element.cloneNode(true);
+  clone.style.maxWidth = "85vw";
+  clone.style.maxHeight = "75vh";
+  clone.removeAttribute("controls");
+  if (clone.tagName === "VIDEO") clone.controls = true;
+  lightboxContainer.appendChild(clone);
+  activeMediaElement = clone;
+  lightboxModal.classList.add("active");
+}
+
+lightboxCloseBtn.addEventListener("click", () => lightboxModal.classList.remove("active"));
+lightboxModal.addEventListener("click", (e) => { if (e.target === lightboxModal) lightboxModal.classList.remove("active"); });
+
+lightboxSpeedBtn.addEventListener("click", () => {
+  if (activeMediaElement && activeMediaElement.tagName === "VIDEO") {
+    currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
+    const spd = speeds[currentSpeedIndex];
+    activeMediaElement.playbackRate = spd;
+    lightboxSpeedBtn.textContent = spd + "x Speed";
+  }
+});
+
+lightboxDownloadBtn.addEventListener("click", () => {
+  if (activeMediaElement && activeMediaElement.src) {
+    const a = document.createElement("a");
+    a.href = activeMediaElement.src;
+    a.download = "fitness-media." + (activeMediaElement.tagName === "VIDEO" ? "mp4" : "png");
+    a.target = "_blank";
+    a.click();
+  }
+});
+
+// --- Welcome Hero Card ---
 function renderWelcomeHero() {
   log.innerHTML = "";
   const hero = el("div", "welcome-hero");
   hero.innerHTML = `
     <div class="welcome-icon">⚡</div>
-    <h2>Welcome to NovaSmart Fitness Coach!</h2>
-    <p>I can help you search workout routines, calculate heart rate zones, generate exercise diagrams, and find nearby gyms.</p>
+    <h2>Welcome to NovaSmart Fitness!</h2>
+    <p>Your multi-tool AI health coach powered by Gemini & Vertex AI Memory Bank.</p>
     <div class="welcome-grid">
       <div class="feature-card" data-prompt="Suggest a 30-min beginner HIIT workout">
         <div class="feature-card-title">🏃 Workouts & Routines</div>
@@ -725,13 +1018,13 @@ function renderWelcomeHero() {
         <div class="feature-card-title">❤️ Heart Rate Zones</div>
         <div class="feature-card-desc">Calculate fat-burn and aerobic training zones.</div>
       </div>
-      <div class="feature-card" data-prompt="Find nearby gyms in San Francisco">
-        <div class="feature-card-title">🏋️ Nearby Gyms</div>
-        <div class="feature-card-desc">Locate local fitness centers and sports facilities.</div>
+      <div class="feature-card" data-prompt="Show macro calculator card">
+        <div class="feature-card-title">📊 Macro Calculator</div>
+        <div class="feature-card-desc">Calculate TDEE and target protein/carbs/fat.</div>
       </div>
-      <div class="feature-card" data-prompt="Show me how to do pushups with a diagram">
-        <div class="feature-card-title">📊 Visual Diagrams</div>
-        <div class="feature-card-desc">Generate step-by-step exercise guides.</div>
+      <div class="feature-card" data-prompt="Find nearby gyms in San Francisco">
+        <div class="feature-card-title">🏋️ Gym Finder</div>
+        <div class="feature-card-desc">Locate local fitness centers and sports facilities.</div>
       </div>
     </div>
   `;
@@ -747,12 +1040,9 @@ function removeWelcomeHero() {
   if (hero) hero.remove();
 }
 
-// --- Feature 3: Clear Chat ---
-clearBtn.addEventListener("click", () => {
-  renderWelcomeHero();
-});
+clearBtn.addEventListener("click", () => renderWelcomeHero());
 
-// --- Feature 4: Speech Recognition ---
+// --- Speech Recognition ---
 let recognition = null;
 if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -761,29 +1051,32 @@ if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
   recognition.interimResults = false;
 
   recognition.onstart = () => {
-    micBtn.classList.add("listening");
-    micBtn.querySelector(".material-symbols-outlined").textContent = "graphic_eq";
+    micBtn.innerHTML = `<div class="wave-bars"><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div></div>`;
   };
   recognition.onend = () => {
-    micBtn.classList.remove("listening");
-    micBtn.querySelector(".material-symbols-outlined").textContent = "mic";
+    micBtn.innerHTML = `<span class="material-symbols-outlined">mic</span>`;
   };
   recognition.onresult = (ev) => {
-    const transcript = ev.results[0][0].transcript;
-    input.value = transcript;
+    input.value = ev.results[0][0].transcript;
     input.focus();
   };
 
   micBtn.addEventListener("click", () => {
-    if (micBtn.classList.contains("listening")) {
-      recognition.stop();
-    } else {
-      recognition.start();
-    }
+    if (micBtn.querySelector(".wave-bars")) recognition.stop();
+    else recognition.start();
   });
 } else {
   micBtn.style.display = "none";
 }
+
+// Image Attachment Trigger
+attachBtn.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => {
+  if (fileInput.files.length) {
+    showToast("Attached image: " + fileInput.files[0].name);
+    input.value += " [Image attached: " + fileInput.files[0].name + "]";
+  }
+});
 
 // --- Dialogue Bubble & Renderer ---
 function bubble(who) {
@@ -794,6 +1087,35 @@ function bubble(who) {
   const b = el("div", "bubble");
   
   content.appendChild(b);
+
+  if (who === "agent") {
+    const actions = el("div", "msg-actions");
+    
+    // Copy Button
+    const copyBtn = el("button", "msg-action-btn", "Copy");
+    copyBtn.innerHTML = `<span class="material-symbols-outlined">content_copy</span> Copy`;
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(b.innerText);
+      showToast("Copied to clipboard!");
+    });
+    
+    // Read Aloud Button
+    const speakBtn = el("button", "msg-action-btn", "Read");
+    speakBtn.innerHTML = `<span class="material-symbols-outlined">volume_up</span> Read`;
+    speakBtn.addEventListener("click", () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(b.innerText);
+        window.speechSynthesis.speak(msg);
+        showToast("Reading aloud...");
+      }
+    });
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(speakBtn);
+    content.appendChild(actions);
+  }
+
   row.appendChild(avatar);
   row.appendChild(content);
   log.appendChild(row);
@@ -805,6 +1127,93 @@ function showTypingIndicator() {
   const b = bubble("agent");
   b.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
   return b;
+}
+
+// Interactive Timer Widget Renderer
+function renderTimerWidget(container, seconds = 60) {
+  const widget = el("div", "timer-widget");
+  let left = seconds;
+  let timerId = null;
+
+  widget.innerHTML = `
+    <div style="font-weight:700;font-size:0.85rem;color:var(--text-secondary)">⏱️ Workout Interval Timer</div>
+    <div class="timer-display" id="tdisplay">${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}</div>
+    <div class="timer-controls">
+      <button class="timer-btn" id="tstart"><span class="material-symbols-outlined">play_arrow</span> Start</button>
+      <button class="timer-btn" id="tpause" style="background:var(--border);color:var(--text-primary)"><span class="material-symbols-outlined">pause</span> Pause</button>
+    </div>
+  `;
+  container.appendChild(widget);
+
+  const disp = widget.querySelector("#tdisplay");
+  const startBtn = widget.querySelector("#tstart");
+  const pauseBtn = widget.querySelector("#tpause");
+
+  startBtn.addEventListener("click", () => {
+    if (timerId) return;
+    timerId = setInterval(() => {
+      if (left > 0) {
+        left--;
+        disp.textContent = `${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;
+      } else {
+        clearInterval(timerId); timerId = null;
+        showToast("Timer finished! Great set!");
+      }
+    }, 1000);
+  });
+
+  pauseBtn.addEventListener("click", () => {
+    if (timerId) { clearInterval(timerId); timerId = null; }
+  });
+}
+
+// Interactive Macro Calculator Widget Renderer
+function renderMacroCard(container) {
+  const card = el("div", "macro-card");
+  card.innerHTML = `
+    <div class="macro-card-title">📊 Calorie & Macro Calculator</div>
+    <div class="macro-slider-group">
+      <div class="macro-slider-header"><span>Weight (kg)</span><span id="mval-weight">70</span></div>
+      <input type="range" min="40" max="150" value="70" class="macro-slider" id="mslider-weight">
+    </div>
+    <div class="macro-slider-group">
+      <div class="macro-slider-header"><span>Height (cm)</span><span id="mval-height">175</span></div>
+      <input type="range" min="140" max="210" value="175" class="macro-slider" id="mslider-height">
+    </div>
+    <div class="macro-results">
+      <div><div class="macro-box-val" id="mres-tdee">2,150</div><div class="macro-box-lbl">TDEE (kcal)</div></div>
+      <div><div class="macro-box-val" id="mres-protein">140g</div><div class="macro-box-lbl">Protein</div></div>
+      <div><div class="macro-box-val" id="mres-carbs">240g</div><div class="macro-box-lbl">Carbs</div></div>
+    </div>
+    <button type="button" class="timer-btn" id="macro-send-btn" style="width:100%;justify-content:center;margin-top:0.4rem">
+      💬 Send Stats to Coach
+    </button>
+  `;
+  container.appendChild(card);
+
+  const wSlider = card.querySelector("#mslider-weight");
+  const hSlider = card.querySelector("#mslider-height");
+  const wVal = card.querySelector("#mval-weight");
+  const hVal = card.querySelector("#mval-height");
+  const tdeeVal = card.querySelector("#mres-tdee");
+  const pVal = card.querySelector("#mres-protein");
+  const cVal = card.querySelector("#mres-carbs");
+
+  function calc() {
+    const w = parseInt(wSlider.value);
+    const h = parseInt(hSlider.value);
+    wVal.textContent = w; hVal.textContent = h;
+    const tdee = Math.round((10 * w + 6.25 * h - 5 * 30 + 5) * 1.4);
+    tdeeVal.textContent = tdee.toLocaleString();
+    pVal.textContent = Math.round(w * 2) + "g";
+    cVal.textContent = Math.round(w * 3.5) + "g";
+  }
+
+  wSlider.addEventListener("input", calc);
+  hSlider.addEventListener("input", calc);
+  card.querySelector("#macro-send-btn").addEventListener("click", () => {
+    submitPrompt(`My weight is ${wSlider.value}kg, height is ${hSlider.value}cm, estimated TDEE is ${tdeeVal.textContent} kcal. Create a custom meal & workout plan for me.`);
+  });
 }
 
 function boundStr(v) {
@@ -853,9 +1262,8 @@ function buildNode(id, comps, seen) {
       else if (hint === "caption") t.classList.add("a2-caption");
       t.textContent = boundStr(props.text);
       
-      // Feature 5: Interactive Card Items
       if (t.textContent.length > 5 && !hint.startsWith("h")) {
-        t.classList.add("clickable-card-item");
+        t.style.cursor = "pointer";
         t.addEventListener("click", () => submitPrompt(t.textContent));
       }
       return t;
@@ -865,7 +1273,9 @@ function buildNode(id, comps, seen) {
     case "Image": {
       const src = boundStr(props.url || props.src);
       if (!/^https?:\/\//i.test(src)) return null;
-      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || ""; return img;
+      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || "";
+      img.addEventListener("click", () => openLightbox(img));
+      return img;
     }
     case "Icon": {
       const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
@@ -909,7 +1319,32 @@ function renderReply(b, parts) {
   const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
 
   const textStr = texts.join("\n").trim();
-  if (textStr) b.appendChild(el("div", null, textStr));
+  if (textStr) {
+    b.appendChild(el("div", null, textStr));
+    
+    // Auto-detect media links in text and convert to playable video / image or lightbox trigger
+    const urlMatches = textStr.match(/https?:\/\/[^\s"]+\.(mp4|webm|png|jpg|jpeg)/gi);
+    if (urlMatches) {
+      urlMatches.forEach(url => {
+        if (url.endsWith(".mp4") || url.endsWith(".webm")) {
+          const video = el("video", "a2img");
+          video.src = url; video.controls = true; video.style.marginTop = "0.75rem";
+          video.addEventListener("click", () => openLightbox(video));
+          b.appendChild(video);
+        } else {
+          const img = el("img", "a2img");
+          img.src = url; img.style.marginTop = "0.75rem";
+          img.addEventListener("click", () => openLightbox(img));
+          b.appendChild(img);
+        }
+      });
+    }
+
+    // Auto-attach Workout Timer Widget if workout routine detected
+    if (/workout|hiit|routine|exercise|seconds|reps/i.test(textStr)) {
+      renderTimerWidget(b, 60);
+    }
+  }
 
   if (a2ui.length) {
     b.classList.add("rich");
@@ -921,6 +1356,14 @@ function renderReply(b, parts) {
 
 function submitPrompt(text) {
   if (!text) return;
+
+  if (text.includes("Macro Calculator")) {
+    removeWelcomeHero();
+    const b = bubble("agent");
+    renderMacroCard(b);
+    return;
+  }
+
   input.value = text;
   if (typeof form.requestSubmit === "function") {
     form.requestSubmit();
@@ -954,7 +1397,8 @@ document.querySelectorAll(".pill").forEach(p => {
   p.addEventListener("click", () => submitPrompt(p.dataset.prompt));
 });
 
-// Initialize Theme & Welcome Hero
+// Initialize Auth & App State
+checkAuth();
 initTheme();
 renderWelcomeHero();
 </script>
