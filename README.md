@@ -1,6 +1,6 @@
 # NovaSmart Fitness Coach
 
-An intelligent, multi-tool AI health and workout assistant built with the **Google Agent Development Kit (ADK)** and **Vertex AI Agent Engine**. NovaSmart Fitness Coach delivers personalized workout planning, target heart rate calculation, real-time nearby gym discovery, AI-generated exercise diagrams and videos, and long-term session memory.
+An intelligent, multi-tool AI health and workout assistant built with the **Google Agent Development Kit (ADK)** and **Vertex AI Agent Engine**. NovaSmart Fitness Coach delivers personalized workout planning, target heart rate calculation, real-time nearby gym discovery, AI-generated exercise diagrams and videos, long-term session memory, and registered user authentication.
 
 ![NovaSmart Fitness Coach Demo](demo.gif)
 
@@ -9,6 +9,13 @@ An intelligent, multi-tool AI health and workout assistant built with the **Goog
 ## ✨ Features & Capabilities
 
 The agent implementation in this repository includes the following capabilities:
+
+* **🔐 Registered User Authentication & Security**
+  * Server-side user verification powered by **Google Cloud Firestore**.
+  * Cryptographic **SHA-256 + HMAC salt** password hashing.
+  * Signed **HMAC-SHA256 JWT (JSON Web Token)** session tokens for stateless client verification.
+  * **Rate limiting middleware** (35 requests/minute per client IP) protecting against API abuse.
+  * Standard production security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection`).
 
 * **🧠 Cross-Session Memory (Vertex AI Memory Bank)**
   * Uses `PreloadMemoryTool` and automated memory extraction callbacks to remember user preferences, fitness goals, injuries, and past workout history across separate sessions.
@@ -37,8 +44,8 @@ The agent implementation in this repository includes the following capabilities:
 * **🎨 Rich Declarative UI (A2UI)**
   * Renders native A2UI cards, columns, rows, and visual items in supported client interfaces.
 
-* **📱 Responsive Web Chat Interface**
-  * Custom FastAPI chat web app featuring Dark/Light mode, speech-to-text voice input (Web Speech API), interactive prompt pills, and touch/iOS safe-area optimizations.
+* **📱 Progressive Web App (PWA) & Responsive Web Chat**
+  * Glassmorphism authentication modal, dark/light mode toggle, PWA manifest (`manifest.json`), interactive interval workout timer, calorie/macro calculator widget, full-screen media lightbox, and speech-to-text voice input.
 
 ---
 
@@ -50,7 +57,9 @@ The agent implementation in this repository includes the following capabilities:
 * **Long-Term Memory**: Vertex AI Memory Bank
 * **Database & Storage**: Google Cloud Firestore & Google Cloud Storage
 * **Location Services**: Google Maps Places API & Geocoding API
+* **Backend Security**: HMAC-SHA256 JWT, SHA-256 Salted Hashing, Sliding-Window Rate Limiting
 * **Frontend Proxy**: FastAPI & Uvicorn with Vanilla JS / HTML5 CSS design system
+* **Automated Testing**: Python `unittest` suite (`frontend/tests/test_backend.py`)
 
 ---
 
@@ -84,12 +93,12 @@ GOOGLE_CLOUD_PROJECT="<your_gcp_project_id>"
 GOOGLE_CLOUD_LOCATION="us-east1"
 ```
 
-### 3. Run the Agent Locally
+### 3. Run Automated Backend Tests
 
-You can test the agent locally using the ADK Development Server:
+Execute the backend test suite to verify security & auth endpoints:
 
 ```bash
-agents-cli dev
+python3 -m unittest frontend/tests/test_backend.py
 ```
 
 ### 4. Run the Web Frontend Locally
@@ -103,7 +112,7 @@ export AGENT_DIRECTORY="app"
 python main.py
 ```
 
-Open a web browser and navigate to the local server port displayed by Uvicorn (default: port 8080).
+Open a web browser and navigate to `http://localhost:8080`.
 
 ---
 
@@ -123,5 +132,5 @@ gcloud run deploy fitness-coach-frontend \
   --source . \
   --region us-east1 \
   --allow-unauthenticated \
-  --set-env-vars "AGENT_ENGINE_RESOURCE_NAME=projects/<PROJECT_ID>/locations/<REGION>/reasoningEngines/<ENGINE_ID>,AGENT_DIRECTORY=app"
+  --set-env-vars "AGENT_ENGINE_RESOURCE_NAME=projects/<PROJECT_ID>/locations/<REGION>/reasoningEngines/<ENGINE_ID>,AGENT_DIRECTORY=app,FIRESTORE_PROJECT=<PROJECT_ID>"
 ```
