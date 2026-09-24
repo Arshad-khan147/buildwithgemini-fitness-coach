@@ -1,8 +1,17 @@
-"""Minimal FastAPI proxy for a deployed A2A agent with Registered User Verification."""
+"""Enterprise FastAPI proxy for NovaSmart Fitness Coach with JWT Auth, Password Hashing, Rate Limiting & Security Headers."""
 
 import os
 import uuid
+import time
+import json
+import re
 import datetime
+import hashlib
+import hmac
+import base64
+import logging
+from typing import Optional
+
 import google.auth
 import google.auth.transport.requests
 import httpx
@@ -22,6 +31,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("novasmart")
+
 RESOURCE = os.environ["AGENT_ENGINE_RESOURCE_NAME"]
 AGENT_DIRECTORY = os.environ.get("AGENT_DIRECTORY", "app")
 LOCATION = RESOURCE.split("/locations/")[1].split("/")[0]
@@ -32,6 +45,9 @@ A2A_BASE = (
 )
 A2A_CARD_URL = f"{A2A_BASE}/.well-known/agent-card.json"
 _A2UI_MIME = "application/json+a2ui"
+
+# JWT Secret & Salt Configuration
+JWT_SECRET = os.environ.get("JWT_SECRET", "novasmart-enterprise-secret-key-2026")
 
 _creds, _ = google.auth.default(
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
@@ -44,28 +60,126 @@ def _auth_headers() -> dict[str, str]:
         "Content-Type": "application/json",
     }
 
-# Registered Users Database (Firestore with in-memory fallback)
+# Cryptographic Password Hashing (SHA-256 + HMAC Salt)
+def hash_password(password: str) -> str:
+    salt = "novasmart_salt_2026"
+    return hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+
+def verify_password(password: str, hashed: str) -> bool:
+    return hmac.compare_digest(hash_password(password), hashed)
+
+# Standard Library Cryptographic JWT Generator & Verifier
+def b64url_encode(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b'=').decode('utf-8')
+
+def b64url_decode(data: str) -> bytes:
+    padding = '=' * (4 - (len(data) % 4))
+    return base64.urlsafe_b64encode(base64.urlsafe_b64decode(data + padding))
+
+def create_jwt_token(email: str, name: str) -> str:
+    header = {"alg": "HS256", "typ": "JWT"}
+    payload = {
+        "sub": email,
+        "name": name,
+        "iat": int(time.time()),
+        "exp": int(time.time()) + 86400  # 24 hours
+    }
+    
+    hdr_b64 = b64url_encode(json.dumps(header).encode('utf-8'))
+    payload_b64 = b64url_encode(json.dumps(payload).encode('utf-8'))
+    
+    signature_input = f"{hdr_b64}.{payload_b64}".encode('utf-8')
+    signature = hmac.new(JWT_SECRET.encode('utf-8'), signature_input, hashlib.sha256).digest()
+    sig_b64 = b64url_encode(signature)
+    
+    return f"{hdr_b64}.{payload_b64}.{sig_b64}"
+
+def decode_jwt_token(token: str) -> Optional[dict]:
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            return None
+        hdr_b64, payload_b64, sig_b64 = parts
+        
+        signature_input = f"{hdr_b64}.{payload_b64}".encode('utf-8')
+        expected_sig = hmac.new(JWT_SECRET.encode('utf-8'), signature_input, hashlib.sha256).digest()
+        
+        if not hmac.compare_digest(b64url_encode(expected_sig), sig_b64):
+            return None
+            
+        padding = '=' * (4 - (len(payload_b64) % 4))
+        payload_bytes = base64.urlsafe_b64decode(payload_b64 + padding)
+        payload = json.loads(payload_bytes.decode('utf-8'))
+        
+        if payload.get("exp", 0) < time.time():
+            return None
+            
+        return payload
+    except Exception:
+        return None
+
+# Registered Users Database (Firestore with local fallback)
 FIRESTORE_PROJECT = os.environ.get("FIRESTORE_PROJECT", "qwiklabs-gcp-02-6a284814c841")
 _firestore_db = None
 try:
     from google.cloud import firestore
     _firestore_db = firestore.Client(project=FIRESTORE_PROJECT)
-except Exception:
-    pass
+    logger.info("Connected to Google Cloud Firestore successfully.")
+except Exception as e:
+    logger.warning(f"Firestore initialization fallback: {e}")
 
-# Seed default demo account
 _local_users = {
     "alex.runner@example.com": {
         "email": "alex.runner@example.com",
         "name": "Alex Runner",
-        "password": "fitness2026",
+        "password_hash": hash_password("fitness2026"),
     }
 }
 
-app = FastAPI()
+# Rate Limiter Store: IP -> list of timestamps
+_rate_limit_store: dict[str, list[float]] = {}
+RATE_LIMIT_WINDOW = 60  # seconds
+MAX_REQUESTS_PER_WINDOW = 35
+
+app = FastAPI(title="NovaSmart Fitness Coach Gateway API")
+
+# Rate Limiting & Security Middleware
+@app.middleware("http")
+async def security_and_rate_limit_middleware(request: Request, call_next):
+    start_time = time.time()
+    client_ip = request.client.host if request.client else "unknown"
+
+    # Enforce Rate Limiting
+    if request.url.path.startswith("/chat") or request.url.path.startswith("/auth"):
+        now = time.time()
+        timestamps = _rate_limit_store.get(client_ip, [])
+        valid_timestamps = [ts for ts in timestamps if now - ts < RATE_LIMIT_WINDOW]
+        
+        if len(valid_timestamps) >= MAX_REQUESTS_PER_WINDOW:
+            return JSONResponse(
+                status_code=429,
+                content={"error": "Rate limit exceeded. Please wait a minute before sending more requests."}
+            )
+        
+        valid_timestamps.append(now)
+        _rate_limit_store[client_ip] = valid_timestamps
+
+    response = await call_next(request)
+
+    # Security Headers & Response Time
+    process_time = (time.time() - start_time) * 1000
+    response.headers["X-Process-Time"] = f"{process_time:.2f}ms"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+
+    logger.info(f"{request.method} {request.url.path} - {response.status_code} [{process_time:.2f}ms]")
+    return response
+
 
 @app.exception_handler(Exception)
 async def _json_errors(request: Request, exc: Exception):
+    logger.error(f"Unhandled Exception: {exc}")
     return JSONResponse(
         status_code=200,
         content={
@@ -85,9 +199,6 @@ async def _get_card(client: httpx.AsyncClient) -> AgentCard:
         card.url = A2A_BASE
         _card = card
     return _card
-
-import json
-import re
 
 _DATAPART_RE = re.compile(r"<a2a_datapart_json>(.*?)</a2a_datapart_json>", re.DOTALL)
 
@@ -128,7 +239,7 @@ def _extract_parts(parts: list) -> list[dict]:
     return out
 
 
-# --- USER AUTHENTICATION & REGISTRATION ENDPOINTS ---
+# --- ENTERPRISE AUTHENTICATION ENDPOINTS ---
 
 @app.post("/auth/register")
 async def register_user(req: Request):
@@ -140,7 +251,8 @@ async def register_user(req: Request):
     if not email or not password:
         return JSONResponse(status_code=400, content={"error": "Email and password are required."})
 
-    # Check if user exists in Firestore
+    hashed = hash_password(password)
+
     if _firestore_db:
         try:
             doc_ref = _firestore_db.collection("app_users").document(email)
@@ -151,20 +263,31 @@ async def register_user(req: Request):
             user_data = {
                 "email": email,
                 "name": name,
-                "password": password,
+                "password_hash": hashed,
                 "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
             doc_ref.set(user_data)
-            return JSONResponse({"success": True, "message": "Registration successful!", "user": {"email": email, "name": name}})
+            token = create_jwt_token(email, name)
+            return JSONResponse({
+                "success": True,
+                "message": "Registration successful!",
+                "token": token,
+                "user": {"email": email, "name": name}
+            })
         except Exception as e:
-            pass
+            logger.error(f"Firestore registration error: {e}")
 
-    # Fallback local store check
     if email in _local_users:
         return JSONResponse(status_code=400, content={"error": "This email is already registered! Please sign in instead."})
     
-    _local_users[email] = {"email": email, "name": name, "password": password}
-    return JSONResponse({"success": True, "message": "Registration successful!", "user": {"email": email, "name": name}})
+    _local_users[email] = {"email": email, "name": name, "password_hash": hashed}
+    token = create_jwt_token(email, name)
+    return JSONResponse({
+        "success": True,
+        "message": "Registration successful!",
+        "token": token,
+        "user": {"email": email, "name": name}
+    })
 
 
 @app.post("/auth/login")
@@ -176,7 +299,6 @@ async def login_user(req: Request):
     if not email or not password:
         return JSONResponse(status_code=400, content={"error": "Email and password are required."})
 
-    # Verify user in Firestore
     if _firestore_db:
         try:
             doc_ref = _firestore_db.collection("app_users").document(email)
@@ -188,29 +310,37 @@ async def login_user(req: Request):
                 )
             
             user_data = doc.to_dict()
-            if user_data.get("password") != password:
+            stored_hash = user_data.get("password_hash") or hash_password(user_data.get("password", ""))
+            
+            if not verify_password(password, stored_hash):
                 return JSONResponse(status_code=401, content={"error": "Incorrect password. Please check your password and try again."})
 
+            token = create_jwt_token(email, user_data.get("name", email.split("@")[0]))
             return JSONResponse({
                 "success": True,
+                "token": token,
                 "user": {"email": email, "name": user_data.get("name", email.split("@")[0])}
             })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Firestore login error: {e}")
 
-    # Fallback local store check
     if email not in _local_users:
         return JSONResponse(
             status_code=401,
             content={"error": f"No registered account found for '{email}'. Please click 'Register' to create your account first!"}
         )
 
-    if _local_users[email]["password"] != password:
+    user_info = _local_users[email]
+    stored_hash = user_info.get("password_hash") or hash_password(user_info.get("password", ""))
+
+    if not verify_password(password, stored_hash):
         return JSONResponse(status_code=401, content={"error": "Incorrect password. Please check your password and try again."})
 
+    token = create_jwt_token(email, user_info["name"])
     return JSONResponse({
         "success": True,
-        "user": {"email": email, "name": _local_users[email]["name"]}
+        "token": token,
+        "user": {"email": email, "name": user_info["name"]}
     })
 
 
